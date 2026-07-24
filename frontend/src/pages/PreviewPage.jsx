@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import PhotoGrid from '../components/PhotoGrid'
 import EmailModal from '../components/EmailModal'
 
 export default function PreviewPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const photos = location.state?.photos || null
+
   const [emailOpen, setEmailOpen] = useState(false)
   const [stripStyle, setStripStyle] = useState('vertical')
 
@@ -60,7 +63,7 @@ export default function PreviewPage() {
 
       <div className="flex-1 min-h-0 flex items-center justify-center gap-8 px-6">
         <div className={`flex-shrink-0 self-start ${stripStyle === 'vertical' ? '-mt-8' : 'mt-0'}`}>
-          <PhotoGrid photos={null} layout={stripStyle} />
+          <PhotoGrid photos={photos} layout={stripStyle} />
         </div>
 
         <div className="flex flex-col gap-3">
