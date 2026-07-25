@@ -1,24 +1,30 @@
 {
-  "name": "aws-photobooth-frontend",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.0",
-    "axios": "^1.7.2"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.2.0",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.35",
-    "autoprefixer": "^10.4.17"
-  }
+	"name": "aws-photobooth-frontend",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@jsrepo/transform-javascript": "^8.0.1",
+		"axios": "^1.7.2",
+		"gsap": "^3.15.0",
+		"motion": "^12.42.2",
+		"ogl": "^1.0.11",
+		"qrcode.react": "^4.2.0",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.23.0"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-react": "^4.3.1",
+		"autoprefixer": "^10.4.17",
+		"jsrepo": "^3.8.1",
+		"postcss": "^8.4.35",
+		"tailwindcss": "^3.4.0",
+		"vite": "^5.2.0"
+	}
 }

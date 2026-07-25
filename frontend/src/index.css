@@ -18,10 +18,14 @@ html, body, #root {
 
 body {
   font-family: 'Lexend', sans-serif;
-  background: linear-gradient(180deg, #00075d 0%, #01164a 100%);
+  background: #ffb700;
   color: #ffffff;
   -webkit-user-select: none;
   user-select: none;
+}
+
+#root {
+  position: relative;
 }
 
 .gradient-text {
@@ -137,6 +141,193 @@ body {
   background: rgba(237, 244, 255, 0.22);
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 38, 87, 0.3);
+}
+
+/* Viewfinder corner brackets */
+.viewfinder-frame {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.viewfinder-corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: rgba(255, 255, 255, 0.08);
+  border-style: solid;
+}
+
+.viewfinder-corner--tl {
+  top: 20px;
+  left: 20px;
+  border-width: 2px 0 0 2px;
+}
+
+.viewfinder-corner--tr {
+  top: 20px;
+  right: 20px;
+  border-width: 2px 2px 0 0;
+}
+
+.viewfinder-corner--bl {
+  bottom: 20px;
+  left: 20px;
+  border-width: 0 0 2px 2px;
+}
+
+.viewfinder-corner--br {
+  bottom: 20px;
+  right: 20px;
+  border-width: 0 2px 2px 0;
+}
+
+/* Film grain overlay */
+.film-grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+}
+
+/* Iris-in animation container */
+.iris-container {
+  animation: iris_in 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Radial flash */
+@keyframes flash_radial {
+  0% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 100%);
+  }
+  30% {
+    opacity: 1;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0) 70%);
+  }
+  100% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%);
+  }
+}
+
+/* Circular timer ring */
+.timer-ring {
+  transform: rotate(-90deg);
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: url(#goldGradient);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* Confetti dot animation */
+@keyframes confetti_drop {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Film strip sprocket marks */
+.film-strip {
+  position: relative;
+}
+
+.film-strip::before,
+.film-strip::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 8px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 6px,
+    rgba(255, 255, 255, 0.08) 6px,
+    rgba(255, 255, 255, 0.08) 10px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.film-strip::before {
+  left: -4px;
+}
+
+.film-strip::after {
+  right: -4px;
+}
+
+/* Font utilities */
+.font-display {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-ui {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Aperture pulse animation */
+@keyframes aperture-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.05; }
+  50% { transform: scale(1.8); opacity: 0.15; }
+}
+
+.animate-aperture-pulse {
+  animation: aperture-pulse 3s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Pulse dot animation */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
 }
 
 /* Accessibility reduced motion support */

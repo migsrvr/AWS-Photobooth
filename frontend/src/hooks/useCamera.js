@@ -34,10 +34,15 @@ export default function useCamera() {
 
   const capture = useCallback(() => {
     if (!videoEl || !isReady) return null
+    const w = videoEl.videoWidth
+    const h = videoEl.videoHeight
     const canvas = document.createElement('canvas')
-    canvas.width = videoEl.videoWidth
-    canvas.height = videoEl.videoHeight
-    canvas.getContext('2d').drawImage(videoEl, 0, 0)
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    ctx.translate(w, 0)
+    ctx.scale(-1, 1)
+    ctx.drawImage(videoEl, 0, 0, w, h)
     return canvas.toDataURL('image/jpeg')
   }, [videoEl, isReady])
 
