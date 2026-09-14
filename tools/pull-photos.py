@@ -1,4 +1,4 @@
-"""Pull every event photo off the booth server into a local folder.
+"""Pull every event photo (+ clip) off the booth server into a local folder.
 
 One process, safe to re-run: sessions already on disk are skipped.
 
@@ -60,6 +60,7 @@ def main() -> int:
         return 1
 
     new, skipped, failed = 0, 0, []
+    videos = 0
     for item in listing.get("photos", []):
         sid = item["session_id"]
         # skip sessions already pulled (photo file OR sidecar present)
@@ -76,11 +77,20 @@ def main() -> int:
             with open(os.path.join(args.out, f"{sid}.json"), "w") as f:
                 json.dump(item, f, indent=2)
             new += 1
+            if item.get("has_video"):
+                video_url = f"{server}/api/photos/{sid}/video"
+                with urllib.request.urlopen(video_url, timeout=TIMEOUT) as r:
+                    vext = {"video/webm": "webm", "video/mp4": "mp4"}.get(
+                        r.headers.get_content_type(), "webm")
+                    vbody = r.read()
+                with open(os.path.join(args.out, f"{sid}.{vext}"), "wb") as f:
+                    f.write(vbody)
+                videos += 1
         except (urllib.error.URLError, OSError) as e:
             failed.append(f"{sid} ({e})")
 
-    print(f"pulled {new} new, {skipped} already have, {len(failed)} failed "
-          f"out of {listing.get('count', 0)} on server -> {args.out}")
+    print(f"pulled {new} new ({videos} with video), {skipped} already have, "
+          f"{len(failed)} failed out of {listing.get('count', 0)} on server -> {args.out}")
     for name in failed:
         print(f"  FAILED: {name}")
     return 1 if failed else 0

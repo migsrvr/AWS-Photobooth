@@ -85,7 +85,7 @@ export default function VideoPreviewPage() {
             )}
           </div>
           <button
-            onClick={() => navigate('/preview', { state: { photo } })}
+            onClick={() => navigate('/preview', { state: { photo, videoBlob } })}
             className="absolute bottom-[23px] right-[41px] w-[249px] h-[59px] rounded-[10px]
                        border-2 border-[#4a3017] bg-[rgba(237,244,255,0.5)]
                        font-primary font-semibold text-xl text-[#4a3017]
