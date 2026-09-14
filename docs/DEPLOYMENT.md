@@ -59,15 +59,21 @@ Kiosk browser ── full flow: / → /ready → /capture → /video → /previe
 
 ## Updating (redeploying)
 
-Push to the `production` branch — both platforms redeploy automatically.
-**Freeze code once doors open:** every redeploy wipes Railway's disk,
-including that morning's photos. Pull photos first (below), then push.
+Railway tracks **`master`** and Vercel tracks **`production`**.
+Land changes on `production` first, then merge to `master`:
 
 ```powershell
 git checkout production
-git merge master   # or commit directly on production
+# ... commit work ...
 git push origin production
+git checkout master
+git merge --ff-only production
+git push origin master
 ```
+
+Both platforms redeploy automatically.
+**Freeze code once doors open:** every redeploy wipes Railway's disk,
+including that morning's photos. Pull photos first (below), then push.
 
 ## Event-day checklist (5 minutes, do this first)
 
