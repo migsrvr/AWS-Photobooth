@@ -131,7 +131,7 @@ py tools/import-figma-assets.py --src-dir <dir-with-downloaded-raws>
 ### QR download flow
 
 `/preview` → QR Code → 5-question survey (all answers + consent required) →
-photo + answers upload to `backend/uploads/` → QR page (`SCAN TO DOWNLOAD`
+photo + answers upload to `uploads/` (repo root, gitignored) → QR page (`SCAN TO DOWNLOAD`
 with session code + Download) → Close → `/thank-you`.
 
 Phones scan the QR, so the URL must be LAN-reachable: the backend uses
@@ -144,6 +144,28 @@ py -m uvicorn app.main:app --reload --port 8000
 ```
 
 Frontend QR rendering is client-side (`qrcode.react`, no network needed).
+
+### Collecting event photos (one process)
+
+The server is a whiteboard — restarts wipe it. Pull everything to your
+machine with one command (safe to re-run; already-downloaded sessions
+are skipped):
+
+```powershell
+py tools/pull-photos.py --server https://<railway-app> --out ./event-photos
+```
+
+Each session saves as `<id>.jpg` + `<id>.json` (photo + survey answers).
+`GET /api/photos` powers the listing. Optional safety net during the
+event — auto-pull every 15 minutes with Task Scheduler:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "py" `
+  -Argument "C:\Users\Miggy\Documents\Photobooth\AWS-Photobooth\tools\pull-photos.py --server https://<railway-app> --out C:\Users\Miggy\Documents\Photobooth\event-photos"
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+  -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Hours 12)
+Register-ScheduledTask -TaskName "PhotoboothPull" -Action $action -Trigger $trigger
+```
 
 ## Project structure
 
