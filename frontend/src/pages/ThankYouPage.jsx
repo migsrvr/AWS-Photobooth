@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AutoResetTimer from '../components/AutoResetTimer'
+import cloudBg from '../assets/cloud-bg.webp'
+import awsLogo from '../assets/aws-logo.webp'
 
 export default function ThankYouPage() {
   const navigate = useNavigate()
@@ -20,9 +22,24 @@ export default function ThankYouPage() {
   return (
     <div
       onClick={handleReset}
-      className="w-full h-full flex flex-col items-center justify-center cursor-pointer
-                 bg-gradient-to-b from-[#01164a] to-[#00075d] animate-fade-slide"
+      className="relative w-full h-full flex flex-col items-center justify-center cursor-pointer
+                 overflow-hidden bg-gradient-to-b from-[#01164a] to-[#00075d] animate-fade-slide"
     >
+      <img
+        src={cloudBg}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none -z-10"
+      />
+      <img
+        src={awsLogo}
+        alt="AWS Student Builder Group - JRU"
+        loading="lazy"
+        decoding="async"
+        className="absolute bottom-4 right-4 w-12 h-12 object-contain pointer-events-none"
+      />
       <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6
                      animate-[border_glow_3s_ease-in-out_infinite]">
         <svg

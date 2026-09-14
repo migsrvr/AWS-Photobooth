@@ -55,6 +55,7 @@ export default {
         headings: ['Montserrat', 'sans-serif'],
         body: ['Lexend', 'sans-serif'],
         forms: ['Inter', 'sans-serif'],
+        display: ['Anton', 'sans-serif'],
       },
       borderRadius: {
         pill: '999px',

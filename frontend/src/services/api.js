@@ -1,7 +1,9 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '/api',
+  // Local dev: relative /api via the Vite proxy. Production (Vercel):
+  // set VITE_API_URL to the backend host, e.g. https://xxx.up.railway.app/api
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
 })
 
@@ -31,6 +33,22 @@ export async function sendEmail(sessionId, email) {
 
 export async function healthCheck() {
   const { data } = await api.get('/health')
+  return data
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, base64] = dataUrl.split(',')
+  const mime = header.match(/data:(.*);base64/)[1]
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  return new Blob([bytes], { type: mime })
+}
+
+/** Uploads one captured photo + survey answers. Returns { session_id, download_url }. */
+export async function uploadSession(photoDataUrl, answers) {
+  const formData = new FormData()
+  formData.append('photo', dataUrlToBlob(photoDataUrl), 'photo.jpg')
+  formData.append('answers', JSON.stringify(answers))
+  const { data } = await api.post('/photos/upload', formData)
   return data
 }
 

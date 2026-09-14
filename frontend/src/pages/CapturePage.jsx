@@ -1,41 +1,31 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CameraFeed from '../components/CameraFeed'
+import WebcamPanel from '../components/WebcamPanel'
 import CountdownOverlay from '../components/CountdownOverlay'
-import ShotTracker from '../components/ShotTracker'
+import capturePhoto from '../utils/capturePhoto'
+import { startRecording } from '../utils/recordVideo'
+import useWebcam from '../hooks/useWebcam'
+import startBg from '../assets/start-bg.webp'
+import awsLogo from '../assets/aws-logo.webp'
 
 export default function CapturePage() {
   const navigate = useNavigate()
-  const [shotIndex, setShotIndex] = useState(0)
   const [countdown, setCountdown] = useState(5)
-  const [phase, setPhase] = useState('idle')
-  const capturedRef = useRef([])
-
-  const advance = useCallback(() => {
-    const next = shotIndex + 1
-    if (next >= 4) {
-      navigate('/preview')
-      return
-    }
-    setShotIndex(next)
-    setCountdown(5)
-    setPhase('countdown')
-  }, [shotIndex, navigate])
-
-  const handleFlashDone = useCallback(() => {
-    capturedRef.current = [...capturedRef.current, `shot_${shotIndex + 1}`]
-
-    if (shotIndex + 1 >= 4) {
-      navigate('/preview')
-    } else {
-      setShotIndex((prev) => prev + 1)
-      setCountdown(5)
-      setPhase('countdown')
-    }
-  }, [shotIndex, navigate])
+  const [phase, setPhase] = useState('countdown')
+  const videoRef = useRef(null)
+  const recorderRef = useRef(null)
+  const { stream, status } = useWebcam()
+  const cameraReady = status === 'live' || status === 'error'
 
   useEffect(() => {
-    if (phase !== 'countdown') return
+    if (phase !== 'countdown' || !cameraReady) return
+    // Record the user's countdown behavior; clip ends at the flash.
+    // Re-created if the stream identity changes (StrictMode remounts can
+    // leave the first recorder attached to stopped tracks).
+    if (!recorderRef.current || recorderRef.current.stream !== stream) {
+      recorderRef.current?.stop()
+      recorderRef.current = { stream, ...startRecording(stream) }
+    }
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -46,41 +36,67 @@ export default function CapturePage() {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [phase])
+  }, [phase, cameraReady, stream])
 
-  const startCountdown = useCallback(() => {
-    setCountdown(5)
-    setPhase('countdown')
-  }, [])
-
-  useEffect(() => {
-    startCountdown()
-  }, [startCountdown])
+  const handleFlashDone = useCallback(async () => {
+    const photo = capturePhoto(videoRef.current)
+    const recorder = recorderRef.current
+    recorderRef.current = null
+    const videoBlob = recorder ? await recorder.stop() : null
+    navigate('/video', { state: { photo, videoBlob } })
+  }, [navigate])
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8
-                   bg-gradient-to-b from-[#00075d] to-[#01164a]">
-      <div className="relative w-full max-w-lg aspect-[4/3] mb-8
-                     conic-border hover-glow transition-all duration-500">
-        <CameraFeed shotIndex={shotIndex} />
+    <div className="relative w-full h-full overflow-hidden bg-[#f0dfce]">
+      <img
+        src={startBg}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover opacity-75 pointer-events-none"
+      />
 
-        {(phase === 'countdown' || phase === 'flash') && (
-          <CountdownOverlay
-            seconds={countdown}
-            onFlashDone={handleFlashDone}
-          />
+      <header className="absolute top-8 left-8 z-10 flex items-center gap-4 pointer-events-none">
+        <img
+          src={awsLogo}
+          alt="AWS Student Builder Group - JRU logo"
+          loading="lazy"
+          decoding="async"
+          className="w-16 h-16 object-contain"
+        />
+        <div className="text-center">
+          <p className="font-display text-[#1e1e1e] text-[22px] leading-tight tracking-[1.1px]">
+            AWS STUDENT BUILDER GROUP - JRU
+          </p>
+          <p className="font-display text-[#1e1e1e] text-xl leading-tight tracking-[1px]">
+            PHOTOBOOTH
+          </p>
+        </div>
+      </header>
+
+      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
+        <h1 className="font-primary font-extrabold text-[#1e1e1e] text-[40px] tracking-[1.2px] text-center">
+          {phase === 'flash' ? 'SMILE!' : 'PREPARING THE FRONT PAGE...'}
+        </h1>
+        {phase !== 'flash' && (
+          <p className="font-primary font-medium italic text-[#1e1e1e] text-[22px] text-center mt-1">
+            Get ready... Taking photos in...
+          </p>
         )}
-      </div>
 
-      <ShotTracker currentShot={shotIndex} totalShots={4} />
-
-      <p className="text-[#b9d2df] text-sm mt-4">
-        {phase === 'countdown'
-          ? 'Get ready...'
-          : phase === 'flash'
-          ? 'Cheese!'
-          : `Shot ${shotIndex + 1} of 4`}
-      </p>
+        <div className="relative w-full max-w-[1046px] aspect-[1046/567] mt-6">
+          <WebcamPanel videoRef={videoRef} stream={stream} status={status} className="absolute inset-0" />
+          {cameraReady && (phase === 'countdown' || phase === 'flash') && (
+            <CountdownOverlay seconds={countdown} onFlashDone={handleFlashDone} />
+          )}
+          {!cameraReady && (
+            <p className="absolute inset-x-0 bottom-4 z-10 text-center text-[#1e1e1e]/70 text-sm font-medium pointer-events-none">
+              Waking up the camera…
+            </p>
+          )}
+        </div>
+      </main>
     </div>
   )
 }
