@@ -1,9 +1,19 @@
 import axios from 'axios'
 
+function apiBaseUrl() {
+  // Tolerant parsing: accepts bare domains ("host.up.railway.app"),
+  // with or without scheme and /api suffix.
+  let base = (import.meta.env.VITE_API_URL || '/api').trim();
+  if (base.startsWith('/')) return base;
+  if (!/^https?:\/\//i.test(base)) base = 'https://' + base.replace(/^\/+/, '');
+  if (!/\/api\/?$/i.test(base)) base = base.replace(/\/+$/, '') + '/api';
+  return base;
+}
+
 const api = axios.create({
   // Local dev: relative /api via the Vite proxy. Production (Vercel):
   // set VITE_API_URL to the backend host, e.g. https://xxx.up.railway.app/api
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: apiBaseUrl(),
   timeout: 10000,
 })
 
