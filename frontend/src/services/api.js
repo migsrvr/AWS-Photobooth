@@ -44,15 +44,20 @@ function dataUrlToBlob(dataUrl) {
 }
 
 /** Uploads one captured photo + optional clip + survey answers.
- *  Returns { session_id, download_url, share_url }. */
+ *  Returns { session_id, download_url, share_url }.
+ *  Throws Error('no-photo') when there is no captured photo to send. */
 export async function uploadSession(photoDataUrl, answers, videoBlob = null) {
+  if (!photoDataUrl) {
+    throw new Error('no-photo')
+  }
   const formData = new FormData()
   formData.append('photo', dataUrlToBlob(photoDataUrl), 'photo.jpg')
   if (videoBlob) {
     formData.append('video', videoBlob, 'clip.webm')
   }
   formData.append('answers', JSON.stringify(answers))
-  const { data } = await api.post('/photos/upload', formData)
+  // Photo+clip uploads can exceed the default 10s on slow venue networks.
+  const { data } = await api.post('/photos/upload', formData, { timeout: 30000 })
   return data
 }
 

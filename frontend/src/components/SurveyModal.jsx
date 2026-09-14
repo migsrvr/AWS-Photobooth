@@ -71,8 +71,14 @@ export default function SurveyModal({ isOpen, photo, videoBlob, onClose, onDone 
       const result = { downloadUrl: download_url, sessionId: session_id, shareUrl: share_url }
       reset()
       onDone(result)
-    } catch {
-      setUploadError('Upload failed — check the connection and try again.')
+    } catch (err) {
+      if (err?.message === 'no-photo') {
+        setUploadError('No photo was captured — retake with the camera on, then try again.')
+      } else if (err?.code === 'ECONNABORTED') {
+        setUploadError('Upload timed out — the connection is slow. Try again.')
+      } else {
+        setUploadError('Upload failed — check the connection and try again.')
+      }
       setUploading(false)
     }
   }
