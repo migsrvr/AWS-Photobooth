@@ -45,9 +45,11 @@ def _read_meta(session_id: str) -> dict:
 
 def public_base_url() -> str:
     """Absolute base URL phones can reach. Override with PUBLIC_BASE_URL."""
-    env = os.environ.get("PUBLIC_BASE_URL")
+    env = (os.environ.get("PUBLIC_BASE_URL") or "").strip().rstrip("/")
     if env:
-        return env.rstrip("/")
+        if "://" not in env:
+            env = "https://" + env
+        return env
     try:
         lan_ip = socket.gethostbyname(socket.gethostname())
     except OSError:

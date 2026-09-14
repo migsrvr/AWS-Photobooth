@@ -8,7 +8,7 @@ from app.routes.share import router as share_router
 
 app = FastAPI(title="AWS Photobooth API", version="1.0.0")
 
-frontend_urls = [u.strip() for u in os.environ.get("FRONTEND_URL", "").split(",") if u.strip()]
+frontend_urls = [u.strip().rstrip("/") for u in os.environ.get("FRONTEND_URL", "").split(",") if u.strip()]
 if frontend_urls:
     app.add_middleware(
         CORSMiddleware,
