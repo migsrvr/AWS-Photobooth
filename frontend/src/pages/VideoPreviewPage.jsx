@@ -70,7 +70,7 @@ export default function VideoPreviewPage() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover -scale-x-100"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">

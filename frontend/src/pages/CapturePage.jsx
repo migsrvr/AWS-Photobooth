@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import WebcamPanel from '../components/WebcamPanel'
 import CountdownOverlay from '../components/CountdownOverlay'
 import capturePhoto from '../utils/capturePhoto'
-import { startRecording } from '../utils/recordVideo'
+import composeNewspaper from '../utils/composeNewspaper'
+import { startMirroredRecording } from '../utils/recordVideo'
 import useWebcam from '../hooks/useWebcam'
 import startBg from '../assets/start-bg.webp'
 import awsLogo from '../assets/aws-logo.webp'
@@ -24,7 +25,7 @@ export default function CapturePage() {
     // leave the first recorder attached to stopped tracks).
     if (!recorderRef.current || recorderRef.current.stream !== stream) {
       recorderRef.current?.stop()
-      recorderRef.current = { stream, ...startRecording(stream) }
+      recorderRef.current = { stream, ...startMirroredRecording(stream) }
     }
     const timer = setInterval(() => {
       setCountdown((prev) => {
@@ -39,7 +40,10 @@ export default function CapturePage() {
   }, [phase, cameraReady, stream])
 
   const handleFlashDone = useCallback(async () => {
-    const photo = capturePhoto(videoRef.current)
+    const raw = capturePhoto(videoRef.current)
+    // The saved photo is the finished front page (mirrored, templated),
+    // exactly what /preview displays and the QR serves.
+    const photo = await composeNewspaper(raw).catch(() => raw)
     const recorder = recorderRef.current
     recorderRef.current = null
     const videoBlob = recorder ? await recorder.stop() : null

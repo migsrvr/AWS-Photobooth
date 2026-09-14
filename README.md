@@ -131,8 +131,9 @@ py tools/import-figma-assets.py --src-dir <dir-with-downloaded-raws>
 
 ### QR download flow (photo + video, one QR)
 
-`/preview` → QR Code → survey (all answers + consent required) → photo,
-countdown clip, and answers upload to `uploads/` (repo root, gitignored) →
+`/preview` → QR Code → survey (all answers + consent required) → finished front
+page (photo composited into the newspaper template), countdown clip, and answers
+upload to `uploads/` (repo root, gitignored) →
 QR page (`SCAN TO DOWNLOAD` with session code) → Close → `/thank-you`.
 
 The QR encodes a share page (`/s/<id>`): photo + looping clip player + Save

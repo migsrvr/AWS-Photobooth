@@ -54,29 +54,31 @@ export default function PreviewPage() {
       <main className="relative z-10 h-full flex items-center justify-center gap-12 px-16">
         <div className="h-[min(725px,82vh)] aspect-[585/725] shrink-0 rounded-[7px]
                         border-[3px] border-[#4a3017] bg-[rgba(189,148,108,0.6)] p-3">
-          <div className="relative w-full h-full rounded-[4px] overflow-hidden">
-            <img
-              src={photoFrame}
-              alt="Your front-page newspaper"
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+          <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-[#d9d9d9]">
             {photo ? (
               <img
                 src={photo}
-                alt="Your captured photo"
-                className="absolute object-cover"
-                style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
+                alt="Your front page"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
-              <div
-                className="absolute flex flex-col items-center justify-center gap-2"
-                style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
-              >
-                <img src={iconImageBlack} alt="" aria-hidden="true" className="w-10 h-10" />
-                <p className="text-[#1e1e1e]/60 text-sm font-medium">No photo yet</p>
-              </div>
+              <>
+                <img
+                  src={photoFrame}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div
+                  className="absolute flex flex-col items-center justify-center gap-2"
+                  style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
+                >
+                  <img src={iconImageBlack} alt="" aria-hidden="true" className="w-10 h-10" />
+                  <p className="text-[#1e1e1e]/60 text-sm font-medium">No photo yet</p>
+                </div>
+              </>
             )}
           </div>
         </div>
