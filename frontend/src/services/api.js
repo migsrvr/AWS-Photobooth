@@ -43,10 +43,14 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([bytes], { type: mime })
 }
 
-/** Uploads one captured photo + survey answers. Returns { session_id, download_url }. */
-export async function uploadSession(photoDataUrl, answers) {
+/** Uploads one captured photo + optional clip + survey answers.
+ *  Returns { session_id, download_url, share_url }. */
+export async function uploadSession(photoDataUrl, answers, videoBlob = null) {
   const formData = new FormData()
   formData.append('photo', dataUrlToBlob(photoDataUrl), 'photo.jpg')
+  if (videoBlob) {
+    formData.append('video', videoBlob, 'clip.webm')
+  }
   formData.append('answers', JSON.stringify(answers))
   const { data } = await api.post('/photos/upload', formData)
   return data

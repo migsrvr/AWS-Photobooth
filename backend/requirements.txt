@@ -1,10 +1,7 @@
 fastapi
 uvicorn
 python-multipart
-google-api-python-client
-google-auth
 watchdog
 pillow
 python-dotenv
-pywin32
 loguru

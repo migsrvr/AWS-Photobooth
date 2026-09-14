@@ -19,10 +19,11 @@ export default function PreviewPage() {
   const [surveyOpen, setSurveyOpen] = useState(false)
   const [qr, setQr] = useState(null)
   const photo = state?.photo ?? null
+  const videoBlob = state?.videoBlob ?? null
 
-  const handleSurveyDone = ({ downloadUrl, sessionId }) => {
+  const handleSurveyDone = ({ downloadUrl, sessionId, shareUrl }) => {
     setSurveyOpen(false)
-    setQr({ downloadUrl, sessionId })
+    setQr({ downloadUrl, sessionId, shareUrl })
   }
 
   const handleQrClose = () => {
@@ -135,12 +136,13 @@ export default function PreviewPage() {
       <SurveyModal
         isOpen={surveyOpen}
         photo={photo}
+        videoBlob={videoBlob}
         onClose={() => setSurveyOpen(false)}
         onDone={handleSurveyDone}
       />
       <QrResultModal
         isOpen={qr !== null}
-        downloadUrl={qr?.downloadUrl}
+        shareUrl={qr?.shareUrl}
         sessionId={qr?.sessionId}
         onClose={handleQrClose}
       />

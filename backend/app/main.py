@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.photos import router as photos_router
+from app.routes.share import router as share_router
 
 app = FastAPI(title="AWS Photobooth API", version="1.0.0")
 
@@ -17,6 +18,7 @@ if frontend_urls:
     )
 
 app.include_router(photos_router)
+app.include_router(share_router)
 
 
 @app.get("/api/health")

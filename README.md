@@ -101,8 +101,9 @@ Supporting code: `src/components/` (CameraFeed, CountdownOverlay, PhotoGrid, Act
 | Frontend call (`src/services/api.js`) | Endpoint | Status |
 |---|---|---|
 | `healthCheck()` | `GET /api/health` | Works |
-| `uploadSession()` | `POST /api/photos/upload` | Works (multipart photo + answers JSON → `{session_id, download_url}`) |
-| — (phone scans QR) | `GET /api/photos/:sessionId/download` | Works (serves the JPEG) |
+| `uploadSession()` | `POST /api/photos/upload` | Works (multipart photo + optional clip + answers JSON → `{session_id, download_url, share_url}`) |
+| — (phone scans QR) | `GET /s/:sessionId` | Works (share page: photo + clip player + Save buttons) |
+| — (share page links) | `GET /api/photos/:sessionId/download` + `GET /api/photos/:sessionId/video` | Work (serve the JPEG / webm) |
 | `uploadPhotos()` | `POST /api/photos/upload` | Legacy stub caller, unused by current flow |
 | `getPhotos()` | `GET /api/photos/:sessionId` | Not implemented (404) |
 | `triggerPrint()` | `POST /api/print/:sessionId` | Not implemented (404) |
@@ -128,15 +129,17 @@ render code, and unreferenced duplicate fills were skipped (see
 py tools/import-figma-assets.py --src-dir <dir-with-downloaded-raws>
 ```
 
-### QR download flow
+### QR download flow (photo + video, one QR)
 
-`/preview` → QR Code → 5-question survey (all answers + consent required) →
-photo + answers upload to `backend/uploads/` → QR page (`SCAN TO DOWNLOAD`
-with session code + Download) → Close → `/thank-you`.
+`/preview` → QR Code → survey (all answers + consent required) → photo,
+countdown clip, and answers upload to `uploads/` (repo root, gitignored) →
+QR page (`SCAN TO DOWNLOAD` with session code) → Close → `/thank-you`.
 
-Phones scan the QR, so the URL must be LAN-reachable: the backend uses
-`PUBLIC_BASE_URL` when set, otherwise auto-detects the machine's LAN IP
-(`http://<lan-ip>:8000`). Set it explicitly at events if the network differs:
+The QR encodes a share page (`/s/<id>`): photo + looping clip player + Save
+photo / Save video buttons. Phones scan the QR, so the URL must be reachable:
+the backend uses `PUBLIC_BASE_URL` when set, otherwise auto-detects the
+machine's LAN IP (`http://<lan-ip>:8000`). Set it explicitly at events if
+the network differs:
 
 ```powershell
 $env:PUBLIC_BASE_URL = "http://192.168.1.36:8000"
@@ -144,6 +147,28 @@ py -m uvicorn app.main:app --reload --port 8000
 ```
 
 Frontend QR rendering is client-side (`qrcode.react`, no network needed).
+
+### Collecting event photos (one process)
+
+The server is a whiteboard — restarts wipe it. Pull everything to your
+machine with one command (safe to re-run; already-downloaded sessions
+are skipped):
+
+```powershell
+py tools/pull-photos.py --server https://<railway-app> --out ./event-photos
+```
+
+Each session saves as `<id>.jpg` + `<id>.json` (photo + survey answers).
+`GET /api/photos` powers the listing. Optional safety net during the
+event — auto-pull every 15 minutes with Task Scheduler:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "py" `
+  -Argument "C:\Users\Miggy\Documents\Photobooth\AWS-Photobooth\tools\pull-photos.py --server https://<railway-app> --out C:\Users\Miggy\Documents\Photobooth\event-photos"
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+  -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Hours 12)
+Register-ScheduledTask -TaskName "PhotoboothPull" -Action $action -Trigger $trigger
+```
 
 ## Project structure
 

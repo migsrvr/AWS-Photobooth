@@ -5,8 +5,8 @@ import { QRCodeSVG } from 'qrcode.react'
  * (1:264) adapted to the newspaper theme: title, QR in a white rect,
  * session code, Download + Close. Background page stays blurred behind.
  */
-export default function QrResultModal({ isOpen, downloadUrl, sessionId, onClose }) {
-  if (!isOpen || !downloadUrl) return null
+export default function QrResultModal({ isOpen, shareUrl, sessionId, onClose }) {
+  if (!isOpen || !shareUrl) return null
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
@@ -23,7 +23,7 @@ export default function QrResultModal({ isOpen, downloadUrl, sessionId, onClose 
           </p>
 
           <div className="bg-white p-4 rounded-[7px] mt-5">
-            <QRCodeSVG data-testid="qr-code" value={downloadUrl} size={288} />
+              <QRCodeSVG data-testid="qr-code" value={shareUrl} size={288} />
           </div>
 
           <p className="font-primary font-medium text-[#1e1e1e] text-[25px] mt-4">

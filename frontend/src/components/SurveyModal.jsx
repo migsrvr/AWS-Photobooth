@@ -36,7 +36,7 @@ function AnswerButtons({ value, onChange, options }) {
  * checkbox, Submit. On submit it uploads the photo + answers and hands
  * { download_url, session_id } to onDone (the QR page shows the code).
  */
-export default function SurveyModal({ isOpen, photo, onClose, onDone }) {
+export default function SurveyModal({ isOpen, photo, videoBlob, onClose, onDone }) {
   const [answers, setAnswers] = useState(Array(QUESTIONS.length).fill(null))
   const [consent, setConsent] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -67,8 +67,8 @@ export default function SurveyModal({ isOpen, photo, onClose, onDone }) {
         QUESTIONS.map((q, i) => [`q${i + 1}`, answers[i]]),
       )
       payload.consent = true
-      const { download_url, session_id } = await uploadSession(photo, payload)
-      const result = { downloadUrl: download_url, sessionId: session_id }
+      const { download_url, session_id, share_url } = await uploadSession(photo, payload, videoBlob)
+      const result = { downloadUrl: download_url, sessionId: session_id, shareUrl: share_url }
       reset()
       onDone(result)
     } catch {
