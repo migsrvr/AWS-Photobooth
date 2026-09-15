@@ -57,6 +57,8 @@ async def list_photos():
             "created_at": row.get("created_at"),
             # has_video derived from video_path (no bool column)
             "has_video": row.get("video_path") is not None,
+            "template": row.get("template", "orgfest"),
+            "bw": bool(row.get("bw", False)),
             "download_url": f"{public_base_url()}/api/photos/{sid}/download",
             "share_url": f"{public_base_url()}/s/{sid}",
         })
@@ -65,7 +67,8 @@ async def list_photos():
 
 @router.post("/upload")
 async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
-                       video: UploadFile | None = File(default=None)):
+                       video: UploadFile | None = File(default=None),
+                       template: str = Form("orgfest"), bw: str = Form("false")):
     if photo.content_type not in EXT_BY_MIME:
         raise HTTPException(status_code=400, detail="photo must be an image")
     try:
@@ -90,6 +93,12 @@ async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
 
     photo_bytes, _ext = compress_image(raw_photo)
 
+    # Normalize template/bw from form (frontend may send string).
+    template = (template or "orgfest").strip().lower()
+    if template not in ("orgfest", "alt"):
+        template = "orgfest"
+    bw = str(bw).strip().lower() in ("1", "true", "yes", "on")
+
     session_id = uuid.uuid4().hex[:12]
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -104,7 +113,7 @@ async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
 
     # 2) Postgres row (straight to table, no JSON sidecar)
     try:
-        ok = db_service.insert_survey(session_id, created_at, parsed_answers, photo_path, video_path)
+        ok = db_service.insert_survey(session_id, created_at, parsed_answers, photo_path, video_path, template, bw)
     except RuntimeError as e:
         # Supabase not configured -> clean up uploaded objects (best-effort) then expose config error
         try:
@@ -124,11 +133,13 @@ async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
             pass
         raise HTTPException(status_code=503, detail="database insert failed")
 
-    logger.info(f"session {session_id}: stored supabase photo={photo_path} video={video_path}")
+    logger.info(f"session {session_id}: stored supabase photo={photo_path} video={video_path} template={template} bw={bw}")
     return {
         "session_id": session_id,
         "download_url": f"{public_base_url()}/api/photos/{session_id}/download",
         "share_url": f"{public_base_url()}/s/{session_id}",
+        "template": template,
+        "bw": bw,
     }
 
 

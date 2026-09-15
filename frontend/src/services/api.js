@@ -56,16 +56,19 @@ function dataUrlToBlob(dataUrl) {
 /** Uploads one captured photo + optional clip + survey answers.
  *  Returns { session_id, download_url, share_url }.
  *  Throws Error('no-photo') when there is no captured photo to send. */
-export async function uploadSession(photoDataUrl, answers, videoBlob = null) {
+export async function uploadSession(photoDataUrl, answers, videoBlob = null, opts = {}) {
   if (!photoDataUrl) {
     throw new Error('no-photo')
   }
+  const { template = 'orgfest', bw = false } = opts
   const formData = new FormData()
   formData.append('photo', dataUrlToBlob(photoDataUrl), 'photo.jpg')
   if (videoBlob) {
     formData.append('video', videoBlob, 'clip.webm')
   }
   formData.append('answers', JSON.stringify(answers))
+  formData.append('template', template)
+  formData.append('bw', bw ? 'true' : 'false')
   // Photo+clip uploads can exceed the default 10s on slow venue networks.
   const { data } = await api.post('/photos/upload', formData, { timeout: 30000 })
   return data

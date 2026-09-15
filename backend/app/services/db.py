@@ -41,14 +41,21 @@ def insert_survey(
     answers: dict,
     photo_path: str,
     video_path: str | None,
+    template: str = "orgfest",
+    bw: bool = False,
 ) -> bool:
     url, key = _cfg()
+    # Normalize template/bw for back-compat rows.
+    template = template if template in ("orgfest", "alt") else "orgfest"
+    bw = bool(bw)
     row = {
         "session_id": session_id,
         "created_at": created_at,
         "photo_path": photo_path,
         "video_path": video_path,
         "consent": bool(answers.get("consent", False)),
+        "template": template,
+        "bw": bw,
     }
     for q, col in ANSWERS_TO_COLS.items():
         row[col] = answers.get(q)

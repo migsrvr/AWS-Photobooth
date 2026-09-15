@@ -41,13 +41,13 @@ export default function CapturePage() {
 
   const handleFlashDone = useCallback(async () => {
     const raw = capturePhoto(videoRef.current)
-    // The saved photo is the finished front page (mirrored, templated),
-    // exactly what /preview displays and the QR serves.
-    const photo = await composeNewspaper(raw).catch(() => raw)
+    // Keep raw (mirrored) so /preview can re-compose with chosen template/bw.
+    // Also compose default orgfest for immediate preview (back-compat).
+    const photo = await composeNewspaper(raw, { template: 'orgfest', bw: false }).catch(() => raw)
     const recorder = recorderRef.current
     recorderRef.current = null
     const videoBlob = recorder ? await recorder.stop() : null
-    navigate('/video', { state: { photo, videoBlob } })
+    navigate('/video', { state: { photo, rawPhoto: raw, videoBlob } })
   }, [navigate])
 
   return (

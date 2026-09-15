@@ -7,7 +7,7 @@ import iconVideo from '../assets/icon-video.svg'
 export default function VideoPreviewPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
-  const { photo, videoBlob } = state ?? {}
+  const { photo, rawPhoto, videoBlob } = state ?? {}
   const [videoUrl, setVideoUrl] = useState(null)
 
   // Object URL is owned by this page: created on mount, revoked on unmount.
@@ -85,7 +85,7 @@ export default function VideoPreviewPage() {
             )}
           </div>
           <button
-            onClick={() => navigate('/preview', { state: { photo, videoBlob } })}
+            onClick={() => navigate('/preview', { state: { photo, rawPhoto, videoBlob } })}
             className="absolute bottom-[23px] right-[41px] w-[249px] h-[59px] rounded-[10px]
                        border-2 border-[#4a3017] bg-[rgba(237,244,255,0.5)]
                        font-primary font-semibold text-xl text-[#4a3017]
