@@ -1,4 +1,14 @@
 import os
+from pathlib import Path
+
+# Load backend/.env for local dev (uvicorn plain CLI). No-op on Railway /
+# production where real env vars are injected (they take precedence).
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - requirements.txt includes it
+    load_dotenv = None
+if load_dotenv is not None:
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
