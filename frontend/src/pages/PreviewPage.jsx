@@ -7,7 +7,6 @@ import startBg from '../assets/start-bg.webp'
 import awsLogo from '../assets/aws-logo.webp'
 import mascotPreview from '../assets/mascot-preview.webp'
 import photoFrame from '../assets/photo-frame.webp'
-import photoFrameAlt from '../assets/photo-frame-alt.webp'
 import iconImageBlack from '../assets/icon-image-black.svg'
 
 const glassButton =
@@ -16,8 +15,8 @@ const glassButton =
   'transition-transform duration-300 hover:scale-105'
 
 const TEMPLATES = [
-  { id: 'orgfest', label: 'Template 1', subtitle: 'ORGFEST', thumb: photoFrame },
-  { id: 'alt', label: 'Template 2', subtitle: 'CLASSIC', thumb: photoFrameAlt },
+  { id: 'orgfest', label: 'Template 1', subtitle: 'ORGFEST' },
+  { id: 'alt', label: 'Template 2', subtitle: 'CLASSIC' },
 ]
 
 export default function PreviewPage() {
@@ -99,49 +98,90 @@ export default function PreviewPage() {
       />
 
       <main className="relative z-10 h-full flex items-center justify-center gap-12 px-16">
-        <div className="h-[min(725px,82vh)] aspect-[585/725] shrink-0 rounded-[7px]
-                        border-[3px] border-[#4a3017] bg-[rgba(189,148,108,0.6)] p-3">
-          <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-[#d9d9d9]">
-            {preview ? (
-              <>
-                <img
-                  src={preview}
-                  alt="Your front page"
-                  className={`absolute inset-0 w-full h-full object-cover ${cssGrayscale}`}
-                  style={!previewIsRecomposed && bw ? { filter: 'grayscale(1)' } : undefined}
-                />
-                {composing && (
-                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
-                    <p className="bg-white/90 text-[#4a3017] text-sm font-medium px-3 py-1.5 rounded-full">Updating…</p>
+        {/* Left stack: preview + template chooser + B&W below it (so right texts not disrupted) */}
+        <div className="flex flex-col items-center shrink-0 gap-3">
+          <div className="h-[min(725px,82vh)] aspect-[585/725] relative rounded-[7px]
+                          border-[3px] border-[#4a3017] bg-[rgba(189,148,108,0.6)] p-3">
+            <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-[#d9d9d9]">
+              {preview ? (
+                <>
+                  <img
+                    src={preview}
+                    alt="Your front page"
+                    className={`absolute inset-0 w-full h-full object-cover ${cssGrayscale}`}
+                    style={!previewIsRecomposed && bw ? { filter: 'grayscale(1)' } : undefined}
+                  />
+                  {composing && (
+                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
+                      <p className="bg-white/90 text-[#4a3017] text-sm font-medium px-3 py-1.5 rounded-full">Updating…</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <img
+                    src={photoFrame}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div
+                    className="absolute flex flex-col items-center justify-center gap-2"
+                    style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
+                  >
+                    <img src={iconImageBlack} alt="" aria-hidden="true" className="w-10 h-10" />
+                    <p className="text-[#1e1e1e]/60 text-sm font-medium">No photo yet</p>
                   </div>
-                )}
-              </>
-            ) : (
-              <>
-                <img
-                  src={photoFrame}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div
-                  className="absolute flex flex-col items-center justify-center gap-2"
-                  style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
-                >
-                  <img src={iconImageBlack} alt="" aria-hidden="true" className="w-10 h-10" />
-                  <p className="text-[#1e1e1e]/60 text-sm font-medium">No photo yet</p>
-                </div>
-              </>
+                </>
+              )}
+            </div>
+            {preview && (
+              <p className="absolute -bottom-6 left-0 right-0 text-center font-primary text-[11px] tracking-[0.8px] text-[#4a3017]/70">
+                {selectedLabel} {bw ? '· Black & White' : '· Color'}
+              </p>
             )}
           </div>
-          {/* small caption under preview */}
-          {preview && (
-            <p className="absolute -bottom-6 left-0 right-0 text-center font-primary text-[11px] tracking-[0.8px] text-[#4a3017]/70">
-              {selectedLabel} {bw ? '· Black & White' : '· Color'}
-            </p>
-          )}
+
+          {/* Template + B&W controls sit below the image, not in the right text column */}
+          <div className="w-[min(585px,44vw)] max-w-[585px]">
+            <div className="grid grid-cols-2 gap-3">
+              {TEMPLATES.map((t) => {
+                const active = template === t.id
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    disabled={!canChoose}
+                    onClick={() => setTemplate(t.id)}
+                    className={`h-[44px] rounded-[5px] border-2 font-primary font-semibold text-[14px] tracking-[0.6px] transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                      ${active ? 'bg-[#4a3017] text-white border-[#4a3017]' : 'bg-white/70 text-[#4a3017] border-[#4a3017]/30 hover:border-[#4a3017]'}`}
+                  >
+                    {t.label.toUpperCase()} <span className="font-normal opacity-70">· {t.subtitle}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-4 rounded-[7px] border border-[#4a3017]/20 bg-white/60 px-4 py-3">
+              <div>
+                <p className="font-primary font-semibold text-[#1e1e1e] text-[14px] leading-none">Black & White</p>
+                <p className="font-primary text-[#1e1e1e]/70 text-xs mt-1">Grayscale the photo</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={bw}
+                aria-label="Black and white"
+                disabled={!canChoose}
+                onClick={() => setBw((v) => !v)}
+                className={`relative inline-flex h-[34px] w-[62px] shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 disabled:opacity-50
+                  ${bw ? 'bg-[#4a3017] border-[#4a3017]' : 'bg-[rgba(189,148,108,0.4)] border-[#4a3017]/30'}`}
+              >
+                <span className={`inline-block h-[26px] w-[26px] transform rounded-full bg-white shadow transition-transform duration-200 ${bw ? 'translate-x-[30px]' : 'translate-x-[2px]'}`} />
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col w-[600px] shrink-0">
@@ -176,58 +216,6 @@ export default function PreviewPage() {
           <button onClick={() => navigate('/capture')} className={`${glassButton} mt-2`}>
             Retake
           </button>
-
-          {/* Template chooser — carries to final QR output */}
-          <div className="mt-6">
-            <p className="font-primary font-semibold italic text-[#1e1e1e] text-lg">
-              Choose your front page
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {TEMPLATES.map((t) => {
-                const active = template === t.id
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    disabled={!canChoose}
-                    onClick={() => setTemplate(t.id)}
-                    className={`relative overflow-hidden rounded-[7px] border-[3px] text-left transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                      ${active ? 'border-[#4a3017] bg-white' : 'border-transparent bg-[rgba(237,244,255,0.5)] hover:border-[#4a3017]/40'}`}
-                  >
-                    <img src={t.thumb} alt="" aria-hidden="true" className="w-full aspect-[585/725] object-cover" loading="lazy" decoding="async" />
-                    <div className={`absolute inset-x-0 bottom-0 px-3 py-2 backdrop-blur-sm ${active ? 'bg-[#4a3017] text-white' : 'bg-black/55 text-white'}`}>
-                      <p className="font-display text-[13px] tracking-[0.8px] leading-none">{t.label.toUpperCase()}</p>
-                      <p className="font-primary text-[11px] opacity-80">{t.subtitle}</p>
-                    </div>
-                    {active && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-white ring-2 ring-[#4a3017]" aria-hidden="true" />}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* B&W toggle */}
-          <div className="mt-4 flex items-center justify-between gap-4 rounded-[7px] border border-[#4a3017]/20 bg-white/60 px-4 py-3">
-            <div>
-              <p className="font-primary font-semibold text-[#1e1e1e] text-[15px] leading-none">Black & White</p>
-              <p className="font-primary text-[#1e1e1e]/70 text-xs mt-1">Grayscale the photo, keep masthead in color</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={bw}
-              aria-label="Black and white"
-              disabled={!canChoose}
-              onClick={() => setBw((v) => !v)}
-              className={`relative inline-flex h-[34px] w-[62px] shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 disabled:opacity-50
-                ${bw ? 'bg-[#4a3017] border-[#4a3017]' : 'bg-[rgba(189,148,108,0.4)] border-[#4a3017]/30'}`}
-            >
-              <span
-                className={`inline-block h-[26px] w-[26px] transform rounded-full bg-white shadow transition-transform duration-200
-                  ${bw ? 'translate-x-[30px]' : 'translate-x-[2px]'}`}
-              />
-            </button>
-          </div>
 
           <p className="font-primary font-semibold italic text-[#1e1e1e] text-lg mt-6">
             Ready to keep these memories? Scan here.
