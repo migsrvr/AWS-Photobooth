@@ -14,6 +14,15 @@ const FRAMES = {
   alt: photoFrameAlt,
 }
 
+// Fit behavior per template.
+// 'cover' fills the slot (crops photo overflow) — suits wide slots.
+// 'contain' fits the whole photo inside the slot (no cropping; the frame's
+// gray placeholder shows as bars) — suits Template 1's squarer slot.
+const FIT_MODE = {
+  orgfest: 'contain',
+  alt: 'cover',
+}
+
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -30,9 +39,10 @@ function loadImage(src) {
  * @param {string} opts.template - 'orgfest' | 'alt'
  * @param {boolean} opts.bw - grayscale the USER photo only (keeps masthead color)
  * @param {number} opts.quality - jpeg quality
+ * @param {string} opts.fit - 'cover' | 'contain' override (default per template)
  * Returns JPEG data URL of finished front page (or null).
  */
-export default async function composeNewspaper(photoDataUrl, { template = 'orgfest', bw = false, quality = 0.82 } = {}) {
+export default async function composeNewspaper(photoDataUrl, { template = 'orgfest', bw = false, quality = 0.82, fit = null } = {}) {
   // Back-compat: composeNewspaper(raw, 0.82) still works
   if (typeof template === 'number') {
     quality = template
@@ -69,13 +79,23 @@ export default async function composeNewspaper(photoDataUrl, { template = 'orgfe
   const dh = (slot.bottom - slot.top) * canvas.height
   const srcW = bw ? photoCanvas.width : photo.naturalWidth
   const srcH = bw ? photoCanvas.height : photo.naturalHeight
-  const scale = Math.max(dw / srcW, dh / srcH)
-  const sw = dw / scale
-  const sh = dh / scale
-  const sx = (srcW - sw) / 2
-  const sy = (srcH - sh) / 2
   const src = bw ? photoCanvas : photo
-  ctx.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh)
+  const fitMode = fit || FIT_MODE[template] || 'cover'
+  if (fitMode === 'contain') {
+    // Whole photo visible: scale to fit inside slot, center it.
+    const s = Math.min(dw / srcW, dh / srcH)
+    const w = srcW * s
+    const h = srcH * s
+    ctx.drawImage(src, 0, 0, srcW, srcH, dx + (dw - w) / 2, dy + (dh - h) / 2, w, h)
+  } else {
+    // Fill slot: scale to cover, center-crop overflow.
+    const scale = Math.max(dw / srcW, dh / srcH)
+    const sw = dw / scale
+    const sh = dh / scale
+    const sx = (srcW - sw) / 2
+    const sy = (srcH - sh) / 2
+    ctx.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh)
+  }
 
   return canvas.toDataURL('image/jpeg', quality)
 }
