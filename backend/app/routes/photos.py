@@ -5,42 +5,25 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import Response
+from loguru import logger
+
+from app.services import db as db_service
+from app.services.compress import compress_image
+from app.services.storage import save_session_media, supabase_delete, supabase_download
 
 router = APIRouter(prefix="/api/photos", tags=["photos"])
 
-# Repo-root uploads/ (AWS-Photobooth/uploads), independent of uvicorn's cwd.
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))))
-UPLOAD_DIR = os.path.join(REPO_ROOT, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# All durable state is Supabase: Storage bucket `photobooth` + table `survey_responses`.
+# No local disk fallback; no JSON sidecar. Configure SUPABASE_* or requests 503.
 
 EXT_BY_MIME = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 VIDEO_MIMES = {"video/webm": "webm", "video/mp4": "mp4"}
+PHOTO_MEDIA = {"jpg": "image/jpeg"}
+VIDEO_MEDIA = {"webm": "video/webm", "mp4": "video/mp4"}
 
-
-def _photo_path(session_id: str) -> str | None:
-    for ext in ("jpg", "png", "webp"):
-        path = os.path.join(UPLOAD_DIR, f"{session_id}.{ext}")
-        if os.path.isfile(path):
-            return path
-    return None
-
-
-def _video_path(session_id: str) -> str | None:
-    for ext in ("webm", "mp4"):
-        path = os.path.join(UPLOAD_DIR, f"{session_id}.{ext}")
-        if os.path.isfile(path):
-            return path
-    return None
-
-
-def _read_meta(session_id: str) -> dict:
-    try:
-        with open(os.path.join(UPLOAD_DIR, f"{session_id}.json")) as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError):
-        raise HTTPException(status_code=404, detail="photo not found")
+MAX_PHOTO_MB = float(os.environ.get("MAX_PHOTO_MB", "15"))
+MAX_VIDEO_MB = float(os.environ.get("MAX_VIDEO_MB", "8"))
 
 
 def public_base_url() -> str:
@@ -57,37 +40,25 @@ def public_base_url() -> str:
     return f"http://{lan_ip}:8000"
 
 
-def _save_sidecar(session_id: str, answers: dict) -> None:
-    meta = {
-        "session_id": session_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "answers": answers,
-    }
-    with open(os.path.join(UPLOAD_DIR, f"{session_id}.json"), "w") as f:
-        json.dump(meta, f)
-
-
 @router.get("")
 async def list_photos():
-    """Lists every session on this server (powers tools/pull-photos.py)."""
+    """Lists every session from Supabase table `survey_responses`."""
+    try:
+        rows = db_service.list_surveys()
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     items = []
-    for name in sorted(os.listdir(UPLOAD_DIR)):
-        if not name.endswith(".json"):
-            continue
-        try:
-            with open(os.path.join(UPLOAD_DIR, name)) as f:
-                meta = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            continue
-        session_id = meta.get("session_id")
-        if not session_id:
+    for row in rows:
+        sid = row.get("session_id")
+        if not sid:
             continue
         items.append({
-            "session_id": session_id,
-            "created_at": meta.get("created_at"),
-            "has_video": meta.get("has_video", False),
-            "download_url": f"{public_base_url()}/api/photos/{session_id}/download",
-            "share_url": f"{public_base_url()}/s/{session_id}",
+            "session_id": sid,
+            "created_at": row.get("created_at"),
+            # has_video derived from video_path (no bool column)
+            "has_video": row.get("video_path") is not None,
+            "download_url": f"{public_base_url()}/api/photos/{sid}/download",
+            "share_url": f"{public_base_url()}/s/{sid}",
         })
     return {"count": len(items), "photos": items}
 
@@ -101,36 +72,59 @@ async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
         parsed_answers = json.loads(answers)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="answers must be JSON")
+    if not isinstance(parsed_answers, dict):
+        raise HTTPException(status_code=400, detail="answers must be JSON")
+    video_ext = None
     if video is not None:
-        # Browsers send codec parameters (e.g. video/webm;codecs=vp9).
         video_mime = (video.content_type or "").split(";")[0].strip()
         if video_mime not in VIDEO_MIMES:
             raise HTTPException(status_code=400, detail="video must be webm or mp4")
+        video_ext = VIDEO_MIMES[video_mime]
+
+    raw_photo = await photo.read()
+    if len(raw_photo) > MAX_PHOTO_MB * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="photo too large")
+    raw_video = await video.read() if video is not None else None
+    if raw_video is not None and len(raw_video) > MAX_VIDEO_MB * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="video too large (max ~8MB)")
+
+    photo_bytes, _ext = compress_image(raw_photo)
 
     session_id = uuid.uuid4().hex[:12]
-    ext = EXT_BY_MIME[photo.content_type]
-    content = await photo.read()
+    created_at = datetime.now(timezone.utc).isoformat()
 
-    with open(os.path.join(UPLOAD_DIR, f"{session_id}.{ext}"), "wb") as f:
-        f.write(content)
+    # 1) Storage (photo required, video optional). No local fallback.
+    try:
+        media = save_session_media(session_id, photo_bytes, raw_video, video_ext)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if media is None:
+        raise HTTPException(status_code=503, detail="storage upload failed")
+    photo_path, video_path = media
 
-    has_video = False
-    if video is not None:
-        video_mime = (video.content_type or "").split(";")[0].strip()
-        vext = VIDEO_MIMES[video_mime]
-        with open(os.path.join(UPLOAD_DIR, f"{session_id}.{vext}"), "wb") as f:
-            f.write(await video.read())
-        has_video = True
+    # 2) Postgres row (straight to table, no JSON sidecar)
+    try:
+        ok = db_service.insert_survey(session_id, created_at, parsed_answers, photo_path, video_path)
+    except RuntimeError as e:
+        # Supabase not configured -> clean up uploaded objects (best-effort) then expose config error
+        try:
+            supabase_delete(photo_path)
+            if video_path:
+                supabase_delete(video_path)
+        except Exception:
+            pass
+        raise HTTPException(status_code=503, detail=str(e))
+    if not ok:
+        # DB insert failed -> clean up storage so we don't leak orphans
+        try:
+            supabase_delete(photo_path)
+            if video_path:
+                supabase_delete(video_path)
+        except Exception:
+            pass
+        raise HTTPException(status_code=503, detail="database insert failed")
 
-    meta = {
-        "session_id": session_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "answers": parsed_answers,
-        "has_video": has_video,
-    }
-    with open(os.path.join(UPLOAD_DIR, f"{session_id}.json"), "w") as f:
-        json.dump(meta, f)
-
+    logger.info(f"session {session_id}: stored supabase photo={photo_path} video={video_path}")
     return {
         "session_id": session_id,
         "download_url": f"{public_base_url()}/api/photos/{session_id}/download",
@@ -140,20 +134,48 @@ async def upload_photo(photo: UploadFile = File(...), answers: str = Form("{}"),
 
 @router.get("/{session_id}/download")
 async def download_photo(session_id: str):
-    _read_meta(session_id)
-    path = _photo_path(session_id)
-    if path is None:
+    try:
+        row = db_service.get_survey(session_id)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if row is None:
         raise HTTPException(status_code=404, detail="photo not found")
-    media = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}[
-        path.rsplit(".", 1)[1]]
-    return FileResponse(path, media_type=media, filename=f"photobooth-{session_id}.{path.rsplit('.', 1)[1]}")
+    photo_path = row.get("photo_path")
+    if not photo_path:
+        raise HTTPException(status_code=404, detail="photo not found")
+    try:
+        data = supabase_download(photo_path)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if data is None:
+        raise HTTPException(status_code=404, detail="photo not found")
+    return Response(
+        content=data,
+        media_type=PHOTO_MEDIA.get(photo_path.rsplit(".", 1)[-1], "image/jpeg"),
+        headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.jpg"'},
+    )
 
 
 @router.get("/{session_id}/video")
 async def download_video(session_id: str):
-    _read_meta(session_id)
-    path = _video_path(session_id)
-    if path is None:
+    try:
+        row = db_service.get_survey(session_id)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if row is None:
+        raise HTTPException(status_code=404, detail="photo not found")
+    video_path = row.get("video_path")
+    if not video_path:
         raise HTTPException(status_code=404, detail="video not found")
-    media = {"webm": "video/webm", "mp4": "video/mp4"}[path.rsplit(".", 1)[1]]
-    return FileResponse(path, media_type=media, filename=f"photobooth-{session_id}.{path.rsplit('.', 1)[1]}")
+    try:
+        data = supabase_download(video_path)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if data is None:
+        raise HTTPException(status_code=404, detail="video not found")
+    ext = video_path.rsplit(".", 1)[-1]
+    return Response(
+        content=data,
+        media_type=VIDEO_MEDIA.get(ext, "video/webm"),
+        headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.{ext}"'},
+    )

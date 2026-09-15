@@ -1,6 +1,6 @@
 """Public share page: one QR opens photo + video + download buttons.
 
-Route: GET /s/{session_id} — self-contained HTML (inline CSS, no external
+Route: GET /s/{session_id} - self-contained HTML (inline CSS, no external
 assets) in the booth's newspaper theme, so any phone browser renders it.
 """
 from fastapi import APIRouter, HTTPException
@@ -10,16 +10,34 @@ router = APIRouter(tags=["share"])
 
 
 def _session_urls(session_id: str, base: str) -> tuple[str, str | None]:
-    from app.routes.photos import _photo_path, _video_path, _read_meta
+    from app.services import db as db_service
+    from app.services.storage import supabase_exists
 
-    _read_meta(session_id)
-    photo_path = _photo_path(session_id)
-    if photo_path is None:
+    try:
+        row = db_service.get_survey(session_id)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if row is None:
         raise HTTPException(status_code=404, detail="photo not found")
+    photo_path = row.get("photo_path")
+    if not photo_path:
+        raise HTTPException(status_code=404, detail="photo not found")
+    # existence check keeps share page honest if storage object was deleted
+    try:
+        if not supabase_exists(photo_path):
+            raise HTTPException(status_code=404, detail="photo not found")
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     photo_url = f"{base}/api/photos/{session_id}/download"
     video_url = None
-    if _video_path(session_id) is not None:
-        video_url = f"{base}/api/photos/{session_id}/video"
+    video_path = row.get("video_path")
+    if video_path:
+        try:
+            if supabase_exists(video_path):
+                video_url = f"{base}/api/photos/{session_id}/video"
+        except RuntimeError:
+            # storage not configured -> no video link but page still renders
+            video_url = None
     return photo_url, video_url
 
 
@@ -33,14 +51,14 @@ async def share_page(session_id: str):
     video_block = ""
     if video_url:
         video_block = f"""
-    <video controls playsinline preload=\"metadata\" src=\"{video_url}\"></video>
-    <a class=\"btn\" href=\"{video_url}\" download=\"photobooth-{session_id}.webm\">Save video</a>"""
+    <video controls playsinline preload="metadata" src="{video_url}"></video>
+    <a class="btn" href="{video_url}" download="photobooth-{session_id}.webm">Save video</a>"""
 
     return f"""<!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-<meta charset=\"utf-8\" />
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AWS Photobooth — your front page</title>
 <style>
   body {{ margin: 0; font-family: Georgia, 'Times New Roman', serif;
@@ -59,10 +77,10 @@ async def share_page(session_id: str):
 <body>
 <main>
   <h1>YOUR FRONT PAGE</h1>
-  <p class=\"sub\">Fresh off the AWS Photobooth press.</p>
-  <img src=\"{photo_url}\" alt=\"Your photobooth photo\" />{video_block}
-  <a class=\"btn\" href=\"{photo_url}\" download=\"photobooth-{session_id}.jpg\">Save photo</a>
-  <p class=\"code\">CODE: {session_id[:6].upper()}</p>
+  <p class="sub">Fresh off the AWS Photobooth press.</p>
+  <img src="{photo_url}" alt="Your photobooth photo" />{video_block}
+  <a class="btn" href="{photo_url}" download="photobooth-{session_id}.jpg">Save photo</a>
+  <p class="code">CODE: {session_id[:6].upper()}</p>
 </main>
 </body>
 </html>"""

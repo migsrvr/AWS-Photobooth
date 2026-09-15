@@ -20,6 +20,16 @@ if frontend_urls:
 app.include_router(photos_router)
 app.include_router(share_router)
 
+# Strict: Supabase must be configured or all photo/video routes 503 (no local fallback).
+# Warn early so misconfigured deploys surface in logs, not just on first upload.
+_missing = [k for k in ("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY") if not os.environ.get(k, "").strip()]
+if _missing:
+    import logging as _logging
+    _logging.getLogger("uvicorn.error").warning(
+        f"Supabase not configured ({', '.join(_missing)} missing) - /api/photos/* will 503. "
+        "Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (+ SUPABASE_BUCKET=photobooth)."
+    )
+
 
 @app.get("/api/health")
 async def health():

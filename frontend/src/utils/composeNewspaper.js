@@ -17,7 +17,7 @@ function loadImage(src) {
  * Returns a JPEG data URL of the finished front page (or null when there
  * is no photo). The saved result is exactly what /preview displays.
  */
-export default async function composeNewspaper(photoDataUrl, quality = 0.92) {
+export default async function composeNewspaper(photoDataUrl, quality = 0.82) {
   if (!photoDataUrl) return null
   const [frame, photo] = await Promise.all([loadImage(photoFrame), loadImage(photoDataUrl)])
   const canvas = document.createElement('canvas')

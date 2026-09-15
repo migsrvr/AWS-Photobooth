@@ -5,3 +5,4 @@ watchdog
 pillow
 python-dotenv
 loguru
+httpx

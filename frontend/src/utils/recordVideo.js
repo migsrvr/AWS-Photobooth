@@ -35,15 +35,22 @@ export function startRecording(stream) {
  * (mirrored) live preview. Tracks stay owned by the caller.
  * Returns { stop } — stop() resolves with the Blob (or null).
  */
-export function startMirroredRecording(stream, { fps = 30 } = {}) {
+export function startMirroredRecording(stream, { fps = 24, maxWidth = 960, videoBitsPerSecond = 1000000 } = {}) {
   if (!stream || typeof MediaRecorder === 'undefined'
       || typeof document === 'undefined' || !document.createElement('canvas').captureStream) {
     return { stop: async () => null }
   }
   const track = stream.getVideoTracks()[0]
   const settings = track?.getSettings() ?? {}
-  const width = settings.width || 1280
-  const height = settings.height || 720
+  let width = settings.width || 1280
+  let height = settings.height || 720
+  // Cap capture resolution so clips stay small enough for Supabase free tier
+  // (~0.7MB for a 6s countdown clip). Preserves aspect ratio.
+  const scale = Math.min(1, maxWidth / Math.max(width, height))
+  if (scale < 1) {
+    width = Math.round((width * scale) / 2) * 2
+    height = Math.round((height * scale) / 2) * 2
+  }
 
   const video = document.createElement('video')
   video.muted = true
@@ -76,7 +83,16 @@ export function startMirroredRecording(stream, { fps = 30 } = {}) {
 
   const chunks = []
   const mimeType = pickMimeType()
-  const recorder = new MediaRecorder(canvasStream, mimeType ? { mimeType } : undefined)
+  const recorderOptions = {}
+  if (mimeType) recorderOptions.mimeType = mimeType
+  // Cap bitrate: 1 Mbps keeps a ~6s clip under ~1MB for Supabase.
+  if (videoBitsPerSecond) recorderOptions.videoBitsPerSecond = videoBitsPerSecond
+  let recorder
+  try {
+    recorder = new MediaRecorder(canvasStream, recorderOptions)
+  } catch {
+    recorder = new MediaRecorder(canvasStream, mimeType ? { mimeType } : undefined)
+  }
   recorder.ondataavailable = (e) => {
     if (e.data && e.data.size > 0) chunks.push(e.data)
   }

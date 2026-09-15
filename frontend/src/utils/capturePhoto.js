@@ -4,7 +4,7 @@
  * user saw in the (mirrored) live preview. Returns null when no frame is
  * available (camera off / not ready).
  */
-export default function capturePhoto(video, quality = 0.92) {
+export default function capturePhoto(video, quality = 0.82) {
   if (!video || !video.videoWidth || !video.videoHeight) return null
   const canvas = document.createElement('canvas')
   canvas.width = video.videoWidth
