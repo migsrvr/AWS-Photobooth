@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AutoResetTimer from '../components/AutoResetTimer'
-import cloudBg from '../assets/cloud-bg.webp'
+import startBg from '../assets/start-bg.webp'
 import awsLogo from '../assets/aws-logo.webp'
+import mascotStart from '../assets/mascot-start.webp'
 
 export default function ThankYouPage() {
   const navigate = useNavigate()
@@ -15,6 +15,10 @@ export default function ThankYouPage() {
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    if (countdown <= 0) navigate('/')
+  }, [countdown, navigate])
+
   const handleReset = () => {
     navigate('/')
   }
@@ -22,55 +26,67 @@ export default function ThankYouPage() {
   return (
     <div
       onClick={handleReset}
-      className="relative w-full h-full flex flex-col items-center justify-center cursor-pointer
-                 overflow-hidden bg-gradient-to-b from-[#01164a] to-[#00075d] animate-fade-slide"
+      className="relative w-full h-full cursor-pointer overflow-hidden bg-[#f0dfce] animate-fade-slide"
     >
       <img
-        src={cloudBg}
+        src={startBg}
+        alt=""
+        aria-hidden="true"
+        fetchpriority="high"
+        className="absolute inset-0 w-full h-full object-cover opacity-75 pointer-events-none"
+      />
+
+      <header className="absolute top-8 left-8 z-10 flex items-center gap-4 pointer-events-none">
+        <img
+          src={awsLogo}
+          alt="AWS Student Builder Group - JRU logo"
+          className="w-16 h-16 object-contain"
+        />
+        <div className="text-center">
+          <p className="font-display text-[#1e1e1e] text-[22px] leading-tight tracking-[1.1px]">
+            AWS STUDENT BUILDER GROUP - JRU
+          </p>
+          <p className="font-display text-[#1e1e1e] text-xl leading-tight tracking-[1px]">
+            PHOTOBOOTH
+          </p>
+        </div>
+      </header>
+
+      <img
+        src={mascotStart}
         alt=""
         aria-hidden="true"
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none -z-10"
+        className="absolute bottom-0 left-3 z-10 w-[335px] max-w-[30vw] object-contain pointer-events-none"
       />
-      <img
-        src={awsLogo}
-        alt="AWS Student Builder Group - JRU"
-        loading="lazy"
-        decoding="async"
-        className="absolute bottom-4 right-4 w-12 h-12 object-contain pointer-events-none"
-      />
-      <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6
-                     animate-[border_glow_3s_ease-in-out_infinite]">
-        <svg
-          className="w-10 h-10 text-emerald-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </div>
 
-      <h1 className="text-4xl font-light bg-clip-text text-transparent
-                    bg-gradient-to-b from-[#fffde8] to-[#fbb515]
-                    mb-4 tracking-wider">
-        Thank You!
-      </h1>
+      <main className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+        <p className="font-primary font-extrabold text-[#1e1e1e] text-[36px] tracking-[1.08px]">
+          THE AWS - SBG JRU TIMES
+        </p>
+        <p className="font-primary text-[#1e1e1e] text-[24px] mt-1">
+          SPECIAL EDITION • 2026
+        </p>
 
-      <p className="text-[#b9d2df] text-lg mb-8 text-center max-w-md">
-        Your photos are being processed.
-        {' They will be printed and a digital copy is on its way.'}
-      </p>
+        <h1 className="font-display text-[#1e1e1e] text-[128px] leading-none tracking-[1.5px] mt-6 max-w-[808px]">
+          Thank you so much!
+        </h1>
 
-      <AutoResetTimer seconds={countdown} onReset={handleReset} />
+        <p className="font-primary font-medium italic text-[#1e1e1e] text-[18px] mt-6">
+          Click any button to start go back to home
+        </p>
+        <p className="font-primary text-[#1e1e1e]/60 text-sm mt-2">
+          Returning to home in <span className="font-semibold text-[#1e1e1e]">{countdown}s</span>
+        </p>
+      </main>
 
-      <p className="text-white/20 text-xs mt-8">Tap anywhere to return</p>
+      <footer className="absolute bottom-6 inset-x-0 z-10 pointer-events-none">
+        <p className="font-primary font-semibold italic text-[#1e1e1e] text-lg text-center">
+          fb: @AWSSBG.JRU&nbsp;&nbsp;&nbsp;ig &amp; tiktok: @aws.sbg_jru&nbsp;&nbsp;&nbsp;linkedin:
+          AWS Student Builder Group - JRU
+        </p>
+      </footer>
     </div>
   )
 }
