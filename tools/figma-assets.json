@@ -1,41 +1,212 @@
 {
   "_notes": "Source of truth for Figma -> webp imports. File: AWS-Photobooth-UI-(Copy), OgEShJuw0wYjIy686akU8c. Raster roles were verified against get_design_context render code per frame (61:137, 3:40, 18:820, 21:1383). download_assets also returns unreferenced fills (hidden layers / component-definition internals); those are listed under skipped, NOT shipped.",
   "assets": [
-    { "output": "cloud-bg.webp", "from": "s8137_1.jpeg", "sha10": "602f5a6e9e", "figma": "Cloud_BG fill, all new-flow frames", "quality": 80, "max_width": 1920 },
-    { "output": "start-bg.webp", "from": "s61_4.png", "sha10": "8b00f2fd54", "figma": "61:137 image 1 (newspaper bg)", "quality": 80 },
-    { "output": "aws-logo.webp", "from": "s61_3.png", "sha10": "365ba705cb", "figma": "AWS SBG (no bg) 1, all frames (4096px master, displayed at 65px)", "quality": 85, "max_width": 512 },
-    { "output": "mascot-start.webp", "from": "s61_5.png", "sha10": "735636456e", "figma": "61:137 Gemini 3ki0f23 mascot", "quality": 85 },
-    { "output": "mascot-loading.webp", "from": "s8137_5.png", "sha10": "b5b8d357e8", "figma": "8:137 Gemini 8mzbn mascot", "quality": 85 },
-    { "output": "mascot-choose.webp", "from": "s340_4.png", "sha10": "7a4b63ee8a", "figma": "3:40 + 18:308 Gemini ky2pwd mascot", "quality": 85 },
-    { "output": "mascot-choose-alt.webp", "from": "s18420_5.png", "sha10": "5d7a0d76ef", "figma": "18:420 Gemini qpb1mu mascot", "quality": 85 },
-    { "output": "mascot-review.webp", "from": "s211383_3.png", "sha10": "d1592f230a", "figma": "21:1383 Gemini g0hb3k mascot", "quality": 85 },
-    { "output": "step-active.svg", "from": "s340_s1.svg", "sha10": "fdf59a8fbb", "figma": "Ellipse 9, gold step dot 37px", "copy": true },
-    { "output": "step-idle.svg", "from": "s340_s2.svg", "sha10": "54014b98eb", "figma": "Ellipse 11, translucent-navy step dot 37px", "copy": true },
-    { "output": "step-done.svg", "from": "s18177_s3.svg", "sha10": "f66edad288", "figma": "Ellipse 10, gold step dot 38px (Taking/Review frames)", "copy": true },
-    { "output": "step-idle-wide.svg", "from": "s340_s4.svg", "sha10": "5215cc27cd", "figma": "Ellipse 10, translucent-navy step dot 38px (Choose frames)", "copy": true },
-    { "output": "step-line-67.svg", "from": "s340_s3.svg", "sha10": "525bcc0487", "figma": "Line 2 step connector 67px", "copy": true },
-    { "output": "step-line-62.svg", "from": "s340_s5.svg", "sha10": "f0c52bf79f", "figma": "Line 3 step connector 62px", "copy": true },
-    { "output": "icon-image-navy-sm.svg", "from": "s18820_s6.svg", "sha10": "e826df025a", "figma": "Image-component placeholder icon, navy 33px", "copy": true },
-    { "output": "icon-image-navy-lg.svg", "from": "s18820_s7.svg", "sha10": "c15b4bd381", "figma": "Image-component placeholder icon, navy 62px", "copy": true },
-    { "output": "icon-image-dark.svg", "from": "s18820_s8.svg", "sha10": "95308a31ca", "figma": "Image-component placeholder icon, dark 33px", "copy": true },
-    { "output": "icon-camera.svg", "from": "s74259_s2.svg", "sha10": "763115c11c", "figma": "74:259 Camera instance size-48 glyph; frame bg+logo hash-match start-bg/aws-logo, reused", "copy": true },
-    { "output": "icon-video.svg", "from": "s74493_s1.svg", "sha10": "ca5509aa73", "figma": "74:493 Video instance glyph 97px; frame bg+logo hash-match start-bg/aws-logo, reused", "copy": true },
-    { "output": "mascot-preview.webp", "from": "s74364_6.png", "sha10": "e5c3bc2a75", "figma": "74:364 Gemini 5wuont mascot (bottom-right); transparent margins cropped to content bbox", "quality": 85 },
-    { "output": "icon-image-black.svg", "from": "s74364_s1.svg", "sha10": "eb06c39771", "figma": "74:364 Image-instance placeholder icon, black 33px", "copy": true },
-    { "output": "photo-frame.webp", "from": "mcp-export-2009-121.png", "figma": "gy83wuAXcyTo0NE3VlSbQH 2009:121 revised ux design ORGFEST Group 39; bg #edeae1 + image5 overlay; photo slot Rectangle 45 x211 y291 w729 h476 -> l21.1/t22.5/r9.4/b41.5; logo jose-rizal 2009:79 TL + AWS SBG 2009:76 TR + image2 2009:77 left + bottom-right 2009:80; text Student Development Office", "quality": 80 },
-    { "output": "photo-frame-alt.webp", "from": "mcp-export-2005-150.png", "figma": "gy83wuAXcyTo0NE3VlSbQH 2005:150 'Group 39' = base 114:157 'ux design' + overlay texts (Poppins headlines 114:204/207, right column 114:217/223/224, bottom-left 114:227/229); photo slot Rectangle 44 x47.01 y480 w729 h476 -> l4.7/t37.1/r22.4/b26.2", "quality": 80 }
+    {
+      "output": "cloud-bg.webp",
+      "from": "s8137_1.jpeg",
+      "sha10": "602f5a6e9e",
+      "figma": "Cloud_BG fill, all new-flow frames",
+      "quality": 80,
+      "max_width": 1920
+    },
+    {
+      "output": "start-bg.webp",
+      "from": "s61_4.png",
+      "sha10": "8b00f2fd54",
+      "figma": "61:137 image 1 (newspaper bg)",
+      "quality": 80
+    },
+    {
+      "output": "aws-logo.webp",
+      "from": "s61_3.png",
+      "sha10": "365ba705cb",
+      "figma": "AWS SBG (no bg) 1, all frames (4096px master, displayed at 65px)",
+      "quality": 85,
+      "max_width": 512
+    },
+    {
+      "output": "mascot-start.webp",
+      "from": "s61_5.png",
+      "sha10": "735636456e",
+      "figma": "61:137 Gemini 3ki0f23 mascot",
+      "quality": 85
+    },
+    {
+      "output": "mascot-loading.webp",
+      "from": "s8137_5.png",
+      "sha10": "b5b8d357e8",
+      "figma": "8:137 Gemini 8mzbn mascot",
+      "quality": 85
+    },
+    {
+      "output": "mascot-choose.webp",
+      "from": "s340_4.png",
+      "sha10": "7a4b63ee8a",
+      "figma": "3:40 + 18:308 Gemini ky2pwd mascot",
+      "quality": 85
+    },
+    {
+      "output": "mascot-choose-alt.webp",
+      "from": "s18420_5.png",
+      "sha10": "5d7a0d76ef",
+      "figma": "18:420 Gemini qpb1mu mascot",
+      "quality": 85
+    },
+    {
+      "output": "mascot-review.webp",
+      "from": "s211383_3.png",
+      "sha10": "d1592f230a",
+      "figma": "21:1383 Gemini g0hb3k mascot",
+      "quality": 85
+    },
+    {
+      "output": "step-active.svg",
+      "from": "s340_s1.svg",
+      "sha10": "fdf59a8fbb",
+      "figma": "Ellipse 9, gold step dot 37px",
+      "copy": true
+    },
+    {
+      "output": "step-idle.svg",
+      "from": "s340_s2.svg",
+      "sha10": "54014b98eb",
+      "figma": "Ellipse 11, translucent-navy step dot 37px",
+      "copy": true
+    },
+    {
+      "output": "step-done.svg",
+      "from": "s18177_s3.svg",
+      "sha10": "f66edad288",
+      "figma": "Ellipse 10, gold step dot 38px (Taking/Review frames)",
+      "copy": true
+    },
+    {
+      "output": "step-idle-wide.svg",
+      "from": "s340_s4.svg",
+      "sha10": "5215cc27cd",
+      "figma": "Ellipse 10, translucent-navy step dot 38px (Choose frames)",
+      "copy": true
+    },
+    {
+      "output": "step-line-67.svg",
+      "from": "s340_s3.svg",
+      "sha10": "525bcc0487",
+      "figma": "Line 2 step connector 67px",
+      "copy": true
+    },
+    {
+      "output": "step-line-62.svg",
+      "from": "s340_s5.svg",
+      "sha10": "f0c52bf79f",
+      "figma": "Line 3 step connector 62px",
+      "copy": true
+    },
+    {
+      "output": "icon-image-navy-sm.svg",
+      "from": "s18820_s6.svg",
+      "sha10": "e826df025a",
+      "figma": "Image-component placeholder icon, navy 33px",
+      "copy": true
+    },
+    {
+      "output": "icon-image-navy-lg.svg",
+      "from": "s18820_s7.svg",
+      "sha10": "c15b4bd381",
+      "figma": "Image-component placeholder icon, navy 62px",
+      "copy": true
+    },
+    {
+      "output": "icon-image-dark.svg",
+      "from": "s18820_s8.svg",
+      "sha10": "95308a31ca",
+      "figma": "Image-component placeholder icon, dark 33px",
+      "copy": true
+    },
+    {
+      "output": "icon-camera.svg",
+      "from": "s74259_s2.svg",
+      "sha10": "763115c11c",
+      "figma": "74:259 Camera instance size-48 glyph; frame bg+logo hash-match start-bg/aws-logo, reused",
+      "copy": true
+    },
+    {
+      "output": "icon-video.svg",
+      "from": "s74493_s1.svg",
+      "sha10": "ca5509aa73",
+      "figma": "74:493 Video instance glyph 97px; frame bg+logo hash-match start-bg/aws-logo, reused",
+      "copy": true
+    },
+    {
+      "output": "mascot-preview.webp",
+      "from": "s74364_6.png",
+      "sha10": "e5c3bc2a75",
+      "figma": "74:364 Gemini 5wuont mascot (bottom-right); transparent margins cropped to content bbox",
+      "quality": 85
+    },
+    {
+      "output": "icon-image-black.svg",
+      "from": "s74364_s1.svg",
+      "sha10": "eb06c39771",
+      "figma": "74:364 Image-instance placeholder icon, black 33px",
+      "copy": true
+    },
+    {
+      "output": "photo-frame.webp",
+      "from": "mcp-export-2009-121.png",
+      "figma": "gy83wuAXcyTo0NE3VlSbQH 2009:121 revised ux design ORGFEST Group 39; bg #edeae1 + image5 overlay; photo slot Rectangle 45 x211 y291 w729 h476 -> l21.1/t22.5/r9.4/b41.5; logo jose-rizal 2009:79 TL + AWS SBG 2009:76 TR + image2 2009:77 left + bottom-right 2009:80; text Student Development Office",
+      "quality": 80
+    },
+    {
+      "output": "photo-frame-alt.webp",
+      "from": "mcp-export-2009-122.png",
+      "figma": "gy83wuAXcyTo0NE3VlSbQH 2009:122 revised Group 40 = base 2009:84 ux design + Poppins headlines 2009:113/114 TL + AWS SBG 2009:110 TR + image3 2009:111 + bottom-right 2009:112; photo slot Rectangle 44 x47.01 y480 w729 h476 -> l4.7/t37.1/r22.4/b26.2; bg #edeae1 + image4 overlay",
+      "quality": 80
+    }
   ],
   "skipped": [
-    { "sha10": "c8e6916864", "why": "512x288 logo duplicate; every frame's render code uses the 4096px master instead" },
-    { "sha10": "10fa0d1cdc", "why": "480x270 jpeg; in no frame's render code (component-definition/hidden fill)" },
-    { "sha10": "f8558c7997", "why": "~332x188 png in Choose frames; in no frame's render code" },
-    { "sha10": "90382f75f0", "why": "~333x188 png in 18:420; in no frame's render code" },
-    { "sha10": "bacd7189d2", "why": "~333x188 png in Review frame; in no frame's render code" },
-    { "sha10": "31ea76c07a", "why": "~333x188 png in Loading frame; in no frame's render code" },
-    { "sha10": "bdd94f89c6", "why": "s61_1.png 500x334; in no frame's render code (Start Screen renders 3 fills only)" },
-    { "sha10": "692566ffda", "why": "74:259 large camera glyph duplicate of icon-camera.svg (same glyph, heavier stroke)" },
-    { "sha10": "6ec5c47fe9", "why": "74:493 small video glyph duplicate of icon-video.svg" },
-    { "sha10": "42623125b7", "why": "s74364_7.png 250x324; in no frame's render code" },
-    { "sha10": "a254572d63", "why": "s74364_8.png 333x188; in no frame's render code" }
+    {
+      "sha10": "c8e6916864",
+      "why": "512x288 logo duplicate; every frame's render code uses the 4096px master instead"
+    },
+    {
+      "sha10": "10fa0d1cdc",
+      "why": "480x270 jpeg; in no frame's render code (component-definition/hidden fill)"
+    },
+    {
+      "sha10": "f8558c7997",
+      "why": "~332x188 png in Choose frames; in no frame's render code"
+    },
+    {
+      "sha10": "90382f75f0",
+      "why": "~333x188 png in 18:420; in no frame's render code"
+    },
+    {
+      "sha10": "bacd7189d2",
+      "why": "~333x188 png in Review frame; in no frame's render code"
+    },
+    {
+      "sha10": "31ea76c07a",
+      "why": "~333x188 png in Loading frame; in no frame's render code"
+    },
+    {
+      "sha10": "bdd94f89c6",
+      "why": "s61_1.png 500x334; in no frame's render code (Start Screen renders 3 fills only)"
+    },
+    {
+      "sha10": "692566ffda",
+      "why": "74:259 large camera glyph duplicate of icon-camera.svg (same glyph, heavier stroke)"
+    },
+    {
+      "sha10": "6ec5c47fe9",
+      "why": "74:493 small video glyph duplicate of icon-video.svg"
+    },
+    {
+      "sha10": "42623125b7",
+      "why": "s74364_7.png 250x324; in no frame's render code"
+    },
+    {
+      "sha10": "a254572d63",
+      "why": "s74364_8.png 333x188; in no frame's render code"
+    }
   ]
 }
