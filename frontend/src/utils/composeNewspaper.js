@@ -2,10 +2,10 @@ import photoFrame from '../assets/photo-frame.webp'
 import photoFrameAlt from '../assets/photo-frame-alt.webp'
 
 // Photo slots per template, as fractions (measured from Figma).
-// orgfest = Frame 53:103 ORGFEST (Rectangle 43: x 226, y 282, w 722, h 595 on 1000x1295 canvas)
+// orgfest = Frame 2007:151 revised ORGFEST (Rectangle 45: x 230, y 282, w 729, h 476 on 1000x1295 canvas)
 // alt = Frame 114:157 "ux design" (Rectangle 44: x 47.01, y 480, w 729, h 476 on 1000x1295 canvas)
 export const SLOTS = {
-  orgfest: { left: 0.226, top: 0.2178, right: 0.948, bottom: 0.6772 },
+  orgfest: { left: 0.23, top: 0.2178, right: 0.959, bottom: 0.5853 },
   alt: { left: 0.047, top: 0.3707, right: 0.776, bottom: 0.7382 },
 }
 
@@ -15,11 +15,11 @@ const FRAMES = {
 }
 
 // Fit behavior per template.
-// 'cover' fills the slot (crops photo overflow) — suits wide slots.
-// 'contain' fits the whole photo inside the slot (no cropping; the frame's
-// gray placeholder shows as bars) — suits Template 1's squarer slot.
+// 'cover' fills the slot (crops photo overflow). Both frames use
+// same-size 729x476 placeholders, so both use cover: the photo takes
+// the whole frame with no bars.
 const FIT_MODE = {
-  orgfest: 'contain',
+  orgfest: 'cover',
   alt: 'cover',
 }
 
