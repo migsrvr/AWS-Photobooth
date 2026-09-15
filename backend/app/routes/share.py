@@ -1,9 +1,12 @@
-"""Public share page: one QR opens photo + video + download buttons.
+"""Public share page: QR codes open photo / video download pages.
 
-Route: GET /s/{session_id} - self-contained HTML (inline CSS, no external
-assets) in the booth's newspaper theme, so any phone browser renders it.
+Route: GET /s/{session_id}?media=photo|video|all - self-contained HTML
+(inline CSS, no external assets) in the booth's newspaper theme, so any
+phone browser renders it. `media` filters to one item so the booth can
+show a dedicated photo QR and video QR; default `all` keeps the old
+combined page.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
 router = APIRouter(tags=["share"])
@@ -42,17 +45,33 @@ def _session_urls(session_id: str, base: str) -> tuple[str, str | None]:
 
 
 @router.get("/s/{session_id}", response_class=HTMLResponse)
-async def share_page(session_id: str):
+async def share_page(session_id: str, media: str = Query("all")):
     from app.routes.photos import public_base_url
 
+    media = (media or "all").strip().lower()
+    if media not in ("all", "photo", "video"):
+        raise HTTPException(status_code=400, detail="media must be photo, video, or all")
     base = public_base_url()
     photo_url, video_url = _session_urls(session_id, base)
+    if media == "video" and not video_url:
+        raise HTTPException(status_code=404, detail="video not found")
 
-    video_block = ""
-    if video_url:
-        video_block = f"""
+    show_photo = media in ("all", "photo")
+    show_video = media in ("all", "video") and video_url
+    title = {"all": "YOUR FRONT PAGE", "photo": "YOUR PHOTO",
+             "video": "YOUR VIDEO"}[media]
+
+    photo_block = (
+        f"""<img src="{photo_url}" alt="Your photobooth photo" />
+  <a class="btn" href="{photo_url}" download="photobooth-{session_id}.jpg">Save photo</a>"""
+        if show_photo else ""
+    )
+    video_block = (
+        f"""
     <video controls playsinline preload="metadata" src="{video_url}"></video>
     <a class="btn" href="{video_url}" download="photobooth-{session_id}.webm">Save video</a>"""
+        if show_video else ""
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -76,10 +95,9 @@ async def share_page(session_id: str):
 </head>
 <body>
 <main>
-  <h1>YOUR FRONT PAGE</h1>
+  <h1>{title}</h1>
   <p class="sub">Fresh off the AWS Photobooth press.</p>
-  <img src="{photo_url}" alt="Your photobooth photo" />{video_block}
-  <a class="btn" href="{photo_url}" download="photobooth-{session_id}.jpg">Save photo</a>
+  {photo_block}{video_block}
   <p class="code">CODE: {session_id[:6].upper()}</p>
 </main>
 </body>

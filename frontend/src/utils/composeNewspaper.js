@@ -105,6 +105,21 @@ export async function composeTemplate(photoDataUrl, opts) {
   return composeNewspaper(photoDataUrl, opts)
 }
 
+// Bakes a whole-image grayscale into a new JPEG data URL. Used when there
+// is no raw capture to re-compose (deep link) but B&W was toggled, so the
+// downloaded photo still matches the preview.
+export async function bakeGrayscaleFilter(photoDataUrl, quality = 0.82) {
+  if (!photoDataUrl) return null
+  const photo = await loadImage(photoDataUrl)
+  const canvas = document.createElement('canvas')
+  canvas.width = photo.naturalWidth
+  canvas.height = photo.naturalHeight
+  const ctx = canvas.getContext('2d')
+  ctx.filter = 'grayscale(1)'
+  ctx.drawImage(photo, 0, 0)
+  return canvas.toDataURL('image/jpeg', quality)
+}
+
 // For UI thumbnails without re-encoding full quality.
 export function availableTemplates() {
   return [

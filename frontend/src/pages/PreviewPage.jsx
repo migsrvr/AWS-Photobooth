@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SurveyModal from '../components/SurveyModal'
 import QrResultModal from '../components/QrResultModal'
-import composeNewspaper, { SLOTS as TEMPLATE_SLOTS, availableTemplates } from '../utils/composeNewspaper'
+import composeNewspaper, { SLOTS as TEMPLATE_SLOTS, availableTemplates, bakeGrayscaleFilter } from '../utils/composeNewspaper'
 import startBg from '../assets/start-bg.webp'
 import awsLogo from '../assets/aws-logo.webp'
 import mascotPreview from '../assets/mascot-preview.webp'
@@ -36,12 +36,26 @@ export default function PreviewPage() {
 
   // Derive preview from rawPhoto when possible so template/bw are live.
   // Falls back to initialPhoto (already composited) when rawPhoto missing (e.g. deep link).
+  // B&W without raw is baked into the preview pixels too, so the uploaded /
+  // QR-downloaded photo always matches what is shown (not CSS-only).
   const source = rawPhoto ?? null
   useEffect(() => {
     let cancelled = false
     if (!source) {
-      // No raw to re-compose: use the capture-time composited photo as-is.
-      // For B&W without raw, we do CSS grayscale on the <img> instead (see render).
+      if (initialPhoto && bw) {
+        setComposing(true)
+        bakeGrayscaleFilter(initialPhoto, 0.82)
+          .then((url) => {
+            if (!cancelled) setPreview(url || initialPhoto)
+          })
+          .catch(() => {
+            if (!cancelled) setPreview(initialPhoto)
+          })
+          .finally(() => {
+            if (!cancelled) setComposing(false)
+          })
+        return () => { cancelled = true }
+      }
       setPreview(initialPhoto)
       return undefined
     }
@@ -257,6 +271,7 @@ export default function PreviewPage() {
         isOpen={qr !== null}
         shareUrl={qr?.shareUrl}
         sessionId={qr?.sessionId}
+        hasVideo={!!videoBlob}
         onClose={handleQrClose}
       />
     </div>
