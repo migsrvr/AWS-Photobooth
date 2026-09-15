@@ -3,12 +3,10 @@ import photoFrameAlt from '../assets/photo-frame-alt.webp'
 
 // Photo slots per template, as fractions (measured from Figma).
 // orgfest = Frame 53:103 ORGFEST (gray rect 226,282 722x595 on 1000x1295 canvas)
-// alt = Frame 114:157 — MCP limit prevented exact measure; reuse orgfest slot
-// with slight inset so preview difference is visible until exact asset replaces it.
-// When alt asset is updated, re-measure its slot and adjust here.
-const SLOTS = {
+// alt = Frame 114:157 "ux design" (Rectangle 44: x 47.01, y 480, w 729, h 476 on 1000x1295 canvas)
+export const SLOTS = {
   orgfest: { left: 0.228, top: 0.22, right: 0.947, bottom: 0.6757 },
-  alt: { left: 0.22, top: 0.21, right: 0.955, bottom: 0.685 },
+  alt: { left: 0.047, top: 0.3707, right: 0.776, bottom: 0.7382 },
 }
 
 const FRAMES = {

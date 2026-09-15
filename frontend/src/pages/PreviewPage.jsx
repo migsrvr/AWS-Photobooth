@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SurveyModal from '../components/SurveyModal'
 import QrResultModal from '../components/QrResultModal'
-import composeNewspaper from '../utils/composeNewspaper'
+import composeNewspaper, { SLOTS as TEMPLATE_SLOTS, availableTemplates } from '../utils/composeNewspaper'
 import startBg from '../assets/start-bg.webp'
 import awsLogo from '../assets/aws-logo.webp'
 import mascotPreview from '../assets/mascot-preview.webp'
@@ -120,7 +120,7 @@ export default function PreviewPage() {
               ) : (
                 <>
                   <img
-                    src={photoFrame}
+                    src={availableTemplates().find((t) => t.id === template)?.frame || photoFrame}
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -129,7 +129,15 @@ export default function PreviewPage() {
                   />
                   <div
                     className="absolute flex flex-col items-center justify-center gap-2"
-                    style={{ left: '22.8%', top: '22%', right: '5.3%', bottom: '32.4%' }}
+                    style={(() => {
+                      const s = TEMPLATE_SLOTS[template] || TEMPLATE_SLOTS.orgfest
+                      return {
+                        left: `${s.left * 100}%`,
+                        top: `${s.top * 100}%`,
+                        right: `${(1 - s.right) * 100}%`,
+                        bottom: `${(1 - s.bottom) * 100}%`,
+                      }
+                    })()}
                   >
                     <img src={iconImageBlack} alt="" aria-hidden="true" className="w-10 h-10" />
                     <p className="text-[#1e1e1e]/60 text-sm font-medium">No photo yet</p>
