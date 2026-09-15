@@ -100,7 +100,7 @@ export default function PreviewPage() {
       <main className="relative z-10 h-full flex items-center justify-center gap-12 px-16">
         {/* Left stack: preview + template chooser + B&W below it (so right texts not disrupted) */}
         <div className="flex flex-col items-center shrink-0 gap-3">
-          <div className="h-[min(725px,82vh)] aspect-[585/725] relative rounded-[7px]
+          <div className="h-[min(725px,82vh)] aspect-[1000/1295] relative rounded-[7px]
                           border-[3px] border-[#4a3017] bg-[rgba(189,148,108,0.6)] p-3">
             <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-[#d9d9d9]">
               {preview ? (
@@ -153,7 +153,7 @@ export default function PreviewPage() {
           </div>
 
           {/* Template + B&W controls sit below the image, not in the right text column */}
-          <div className="w-[min(585px,44vw)] max-w-[585px]">
+          <div className="w-[min(560px,44vw)] max-w-[560px]">
             <div className="grid grid-cols-2 gap-3">
               {TEMPLATES.map((t) => {
                 const active = template === t.id
