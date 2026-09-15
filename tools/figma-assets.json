@@ -22,7 +22,7 @@
     { "output": "icon-video.svg", "from": "s74493_s1.svg", "sha10": "ca5509aa73", "figma": "74:493 Video instance glyph 97px; frame bg+logo hash-match start-bg/aws-logo, reused", "copy": true },
     { "output": "mascot-preview.webp", "from": "s74364_6.png", "sha10": "e5c3bc2a75", "figma": "74:364 Gemini 5wuont mascot (bottom-right); transparent margins cropped to content bbox", "quality": 85 },
     { "output": "icon-image-black.svg", "from": "s74364_s1.svg", "sha10": "eb06c39771", "figma": "74:364 Image-instance placeholder icon, black 33px", "copy": true },
-    { "output": "photo-frame.webp", "from": "mcp-export-2007-151.png", "figma": "gy83wuAXcyTo0NE3VlSbQH 2007:151 revised 'ux design' ORGFEST; photo slot Rectangle 45 x230 y282 w729 h476 -> l23.0/t21.8/r4.1/b41.5; bottom headline block moved up; logo 2007:183 + image2 2007:184 with real fills", "quality": 80 },,
+    { "output": "photo-frame.webp", "from": "mcp-export-2009-121.png", "figma": "gy83wuAXcyTo0NE3VlSbQH 2009:121 revised ux design ORGFEST Group 39; bg #edeae1 + image5 overlay; photo slot Rectangle 45 x211 y291 w729 h476 -> l21.1/t22.5/r9.4/b41.5; logo jose-rizal 2009:79 TL + AWS SBG 2009:76 TR + image2 2009:77 left + bottom-right 2009:80; text Student Development Office", "quality": 80 },
     { "output": "photo-frame-alt.webp", "from": "mcp-export-2005-150.png", "figma": "gy83wuAXcyTo0NE3VlSbQH 2005:150 'Group 39' = base 114:157 'ux design' + overlay texts (Poppins headlines 114:204/207, right column 114:217/223/224, bottom-left 114:227/229); photo slot Rectangle 44 x47.01 y480 w729 h476 -> l4.7/t37.1/r22.4/b26.2", "quality": 80 }
   ],
   "skipped": [
