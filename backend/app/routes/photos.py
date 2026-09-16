@@ -10,7 +10,8 @@ from loguru import logger
 
 from app.services import db as db_service
 from app.services.compress import compress_image
-from app.services.storage import save_session_media, supabase_delete, supabase_download
+from app.services.storage import save_session_media, supabase_delete, supabase_download, supabase_upload
+from app.services.transcode import is_ffmpeg_available, transcode_webm_to_mp4
 
 router = APIRouter(prefix="/api/photos", tags=["photos"])
 
@@ -169,6 +170,14 @@ async def download_photo(session_id: str):
 
 @router.get("/{session_id}/video")
 async def download_video(session_id: str):
+    """
+    Serves the clip. Storage is always the captured format (webm on
+    Chromium kiosks, mp4 on Safari). Phones download mp4: webm is
+    transcoded to H.264/AAC on first hit and the mp4 is cached back to
+    Storage as {session_id}.mp4 so subsequent hits are a straight download.
+    If ffmpeg is absent or transcode fails, serves the stored bytes
+    unchanged (graceful fallback - still plays in Chrome).
+    """
     try:
         row = db_service.get_survey(session_id)
     except RuntimeError as e:
@@ -178,15 +187,78 @@ async def download_video(session_id: str):
     video_path = row.get("video_path")
     if not video_path:
         raise HTTPException(status_code=404, detail="video not found")
+
+    # Stored mp4 can be served directly (e.g. Safari capture, or already
+    # cached mp4 copy of a webm). No transcoding needed.
+    ext = video_path.rsplit(".", 1)[-1].lower()
+    if ext == "mp4":
+        try:
+            data = supabase_download(video_path)
+        except RuntimeError as e:
+            raise HTTPException(status_code=503, detail=str(e))
+        if data is None:
+            raise HTTPException(status_code=404, detail="video not found")
+        return Response(
+            content=data,
+            media_type="video/mp4",
+            headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.mp4"'},
+        )
+
+    # Stored webm: try mp4 cache first, then transcode and cache.
+    # The cache key is deterministic so we don't need a DB column.
+    mp4_cache_path = video_path.rsplit(".", 1)[0] + ".mp4"
+    # 1) cache hit -> serve mp4 directly
     try:
-        data = supabase_download(video_path)
+        cached = supabase_download(mp4_cache_path)
+    except RuntimeError:
+        cached = None
+    if cached is not None:
+        logger.info(f"video {session_id}: serving cached mp4 ({len(cached)} bytes)")
+        return Response(
+            content=cached,
+            media_type="video/mp4",
+            headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.mp4"'},
+        )
+
+    # 2) cache miss -> download webm source
+    try:
+        webm_data = supabase_download(video_path)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    if data is None:
+    if webm_data is None:
         raise HTTPException(status_code=404, detail="video not found")
-    ext = video_path.rsplit(".", 1)[-1]
+
+    # No ffmpeg (local dev without nixpacks) -> serve webm unchanged.
+    if not is_ffmpeg_available():
+        logger.warning(f"video {session_id}: ffmpeg unavailable, serving webm as-is")
+        return Response(
+            content=webm_data,
+            media_type="video/webm",
+            headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.webm"'},
+        )
+
+    mp4 = transcode_webm_to_mp4(webm_data)
+    if mp4 is None:
+        # transcode error -> fall back to original webm
+        return Response(
+            content=webm_data,
+            media_type="video/webm",
+            headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.webm"'},
+        )
+
+    # 3) fire-and-forget cache write so next request is fast. Failures
+    # are non-fatal (we still serve the freshly transcoded bytes).
+    try:
+        ok = supabase_upload(mp4_cache_path, mp4, "video/mp4")
+        if ok:
+            logger.info(f"video {session_id}: cached mp4 {mp4_cache_path} ({len(mp4)} bytes)")
+        else:
+            logger.warning(f"video {session_id}: mp4 cache upload failed for {mp4_cache_path}")
+    except Exception as e:
+        logger.warning(f"video {session_id}: mp4 cache exception ({e})")
+
     return Response(
-        content=data,
-        media_type=VIDEO_MEDIA.get(ext, "video/webm"),
-        headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.{ext}"'},
+        content=mp4,
+        media_type="video/mp4",
+        headers={"Content-Disposition": f'inline; filename="photobooth-{session_id}.mp4"'},
     )

@@ -64,7 +64,12 @@ export async function uploadSession(photoDataUrl, answers, videoBlob = null, opt
   const formData = new FormData()
   formData.append('photo', dataUrlToBlob(photoDataUrl), 'photo.jpg')
   if (videoBlob) {
-    formData.append('video', videoBlob, 'clip.webm')
+    // Keep the filename extension aligned with the blob's actual mime so
+    // backend picks the right VIDEO_MIMES entry. Chromium records webm,
+    // Safari records mp4 — both are accepted server-side.
+    const vt = (videoBlob.type || '').split(';')[0].trim()
+    const ext = vt === 'video/mp4' ? 'mp4' : 'webm'
+    formData.append('video', videoBlob, `clip.${ext}`)
   }
   formData.append('answers', JSON.stringify(answers))
   formData.append('template', template)

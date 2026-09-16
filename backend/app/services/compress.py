@@ -1,9 +1,10 @@
 """Image compression for Supabase Storage uploads.
 
 Keeps each session small enough to fit Supabase free-tier limits:
-photo -> max 1600px long edge, JPEG q~78 progressive. Video is NOT
-transcoded here (no ffmpeg on Railway); size is capped at the route
-level and reduced at capture time on the frontend.
+photo -> max 1600px long edge, JPEG q~78 progressive. Video is stored
+as captured (usually webm on Chromium, mp4 on Safari) and transcoded
+to mp4 on download via app.services.transcode (ffmpeg via nixpacks.toml)
+so phones always get an iPhone-playable file while storage stays small.
 """
 import io
 import os

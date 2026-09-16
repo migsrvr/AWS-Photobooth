@@ -5,7 +5,18 @@
  */
 export function pickMimeType() {
   if (typeof MediaRecorder === 'undefined') return undefined
-  const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+  // Prefer mp4 when available (Safari / some Chromium builds) so the
+  // booth uploads mp4 directly and no server transcode is needed. WebM
+  // remains the fallback — server transcodes WebM → MP4 on download for
+  // iPhone compatibility while storage stays WebM until the first download
+  // caches an MP4 copy.
+  const candidates = [
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ]
   return candidates.find((t) => MediaRecorder.isTypeSupported(t))
 }
 

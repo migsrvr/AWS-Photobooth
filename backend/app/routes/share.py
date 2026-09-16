@@ -66,10 +66,13 @@ async def share_page(session_id: str, media: str = Query("all")):
   <a class="btn" href="{photo_url}" download="photobooth-{session_id}.jpg">Save photo</a>"""
         if show_photo else ""
     )
+    # The API now serves mp4 (transcoded from stored webm), which plays on
+    # iPhone. Filename + type hint match mp4 so Save works even when the
+    # underlying object in Storage is still .webm.
     video_block = (
         f"""
-    <video controls playsinline preload="metadata" src="{video_url}"></video>
-    <a class="btn" href="{video_url}" download="photobooth-{session_id}.webm">Save video</a>"""
+    <video controls playsinline preload="metadata" src="{video_url}" type="video/mp4"></video>
+    <a class="btn" href="{video_url}" download="photobooth-{session_id}.mp4">Save video</a>"""
         if show_video else ""
     )
 
