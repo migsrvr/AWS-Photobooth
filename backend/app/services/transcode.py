@@ -1,12 +1,12 @@
-"""WebM → MP4 transcoding with ffmpeg.
+"""WebM → MP4 transcoding with ffmpeg (legacy fallback).
 
-Storage stays WebM (small, matches what MediaRecorder produces on Chromium).
-Download serves MP4 (H.264 + AAC, yuv420p, faststart) so iPhone Gallery / Files
-can play it without extra apps. FFmpeg is installed via nixpacks.toml
-(aptPkgs = ["ffmpeg"]).
+The booth records MP4 directly, so this only runs for webm files stored
+before the MP4 switch: on first download they are transcoded to MP4
+(H.264 + AAC, yuv420p, faststart) so iPhone Gallery / Files can play
+them. FFmpeg is installed via nixpacks.toml (aptPkgs = ["ffmpeg"]).
 
 Graceful fallback: if ffmpeg is missing or transcode fails, the caller
-should serve the original WebM bytes unchanged (route does this).
+serves the stored bytes unchanged (route does this).
 """
 import os
 import shutil

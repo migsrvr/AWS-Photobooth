@@ -5,11 +5,19 @@
  */
 export function pickMimeType() {
   if (typeof MediaRecorder === 'undefined') return undefined
-  // WebM-only on purpose: MP4 capture (video/mp4;codecs=avc1) produced
-  // upside-down opening frames on the kiosk's Chrome. Phones still get
-  // MP4 — the server transcodes WebM → MP4 on download (see
-  // backend/app/services/transcode.py) and caches the copy.
-  const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+  // Pure MP4 pipeline: prefer MP4 capture so booth, storage, and download
+  // are all MP4 with no conversion. The settle window in
+  // startMirroredRecording keeps warm-up frames out of the clip.
+  // WebM stays as fallback for browsers without MP4 recording — the
+  // server transcodes legacy WebM → MP4 on download (see
+  // backend/app/services/transcode.py).
+  const candidates = [
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ]
   return candidates.find((t) => MediaRecorder.isTypeSupported(t))
 }
 
