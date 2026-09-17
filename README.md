@@ -171,6 +171,19 @@ $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
 Register-ScheduledTask -TaskName "PhotoboothPull" -Action $action -Trigger $trigger
 ```
 
+### Collecting yesterday's videos
+
+The morning after an event, pull the previous day's clips straight from
+the Supabase `photobooth` bucket — original bytes (webm stays webm, mp4
+stays mp4). Creds come from `backend/.env`; safe to re-run
+(`--date YYYY-MM-DD` overrides, `--all` takes all):
+
+```powershell
+py tools/pull-videos.py --out ./event-videos
+```
+
+Each clip saves under `event-videos/` (gitignored) with a `.json` sidecar.
+
 ## Project structure
 
 ```text

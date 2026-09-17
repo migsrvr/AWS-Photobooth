@@ -6,3 +6,4 @@ dist/
 __pycache__/
 *.pyc
 event-photos/
+event-videos/
