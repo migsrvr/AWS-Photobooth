@@ -13,20 +13,37 @@ export default function CapturePage() {
   const navigate = useNavigate()
   const [countdown, setCountdown] = useState(5)
   const [phase, setPhase] = useState('countdown')
+  const [encoderReady, setEncoderReady] = useState(false)
   const videoRef = useRef(null)
   const recorderRef = useRef(null)
   const { stream, status } = useWebcam()
   const cameraReady = status === 'live' || status === 'error'
 
   useEffect(() => {
-    if (phase !== 'countdown' || !cameraReady) return
+    if (phase !== 'countdown' || !cameraReady) return undefined
     // Record the user's countdown behavior; clip ends at the flash.
     // Re-created if the stream identity changes (StrictMode remounts can
     // leave the first recorder attached to stopped tracks).
     if (!recorderRef.current || recorderRef.current.stream !== stream) {
       recorderRef.current?.stop()
-      recorderRef.current = { stream, ...startMirroredRecording(stream) }
+      setEncoderReady(false)
+      setCountdown(5)
+      const rec = { stream, ready: false }
+      recorderRef.current = {
+        ...rec,
+        ...startMirroredRecording(stream, {
+          onstarted: () => {
+            rec.ready = true
+            setEncoderReady(true)
+          },
+        }),
+      }
     }
+    // Hold the countdown until the encoder is actually recording: the
+    // settle window would otherwise eat the head of the 5s clip. The
+    // ready flag lives on the ref so StrictMode remounts (which reuse a
+    // settled recorder but reset state) don't stall in dev.
+    if (!recorderRef.current.ready) return undefined
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -37,7 +54,7 @@ export default function CapturePage() {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [phase, cameraReady, stream])
+  }, [phase, cameraReady, stream, encoderReady])
 
   const handleFlashDone = useCallback(async () => {
     const raw = capturePhoto(videoRef.current)
@@ -91,7 +108,7 @@ export default function CapturePage() {
 
         <div className="relative w-full max-w-[1046px] aspect-[1046/567] mt-6">
           <WebcamPanel videoRef={videoRef} stream={stream} status={status} className="absolute inset-0" />
-          {cameraReady && (phase === 'countdown' || phase === 'flash') && (
+          {cameraReady && encoderReady && (phase === 'countdown' || phase === 'flash') && (
             <CountdownOverlay seconds={countdown} onFlashDone={handleFlashDone} />
           )}
           {!cameraReady && (
