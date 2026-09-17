@@ -4,7 +4,7 @@ import { uploadSession } from '../services/api'
 const YES_NO = ['Yes', 'No']
 
 const QUESTIONS = [
-  { text: 'What year are you?', options: ['1st Year', '2nd Year', '3rd Year', '4th Year'] },
+  { text: 'What is your school level?', options: ['Elem', 'Junior Highschool', 'Senior Highschool', 'College'] },
   { text: 'Do you know anything about AWS Student Builder Group - JRU?', options: YES_NO },
   { text: 'Are you interested in joining AWS Student Builder Group - JRU?', options: YES_NO },
   { text: 'Did you have fun with the AWS SBG - JRU Photobooth?', options: YES_NO },
