@@ -5,18 +5,11 @@
  */
 export function pickMimeType() {
   if (typeof MediaRecorder === 'undefined') return undefined
-  // Prefer mp4 when available (Safari / some Chromium builds) so the
-  // booth uploads mp4 directly and no server transcode is needed. WebM
-  // remains the fallback — server transcodes WebM → MP4 on download for
-  // iPhone compatibility while storage stays WebM until the first download
-  // caches an MP4 copy.
-  const candidates = [
-    'video/mp4;codecs=avc1',
-    'video/mp4',
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8',
-    'video/webm',
-  ]
+  // WebM-only on purpose: MP4 capture (video/mp4;codecs=avc1) produced
+  // upside-down opening frames on the kiosk's Chrome. Phones still get
+  // MP4 — the server transcodes WebM → MP4 on download (see
+  // backend/app/services/transcode.py) and caches the copy.
+  const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
   return candidates.find((t) => MediaRecorder.isTypeSupported(t))
 }
 
@@ -44,9 +37,12 @@ export function startRecording(stream) {
  * Records a MIRRORED clip: draws the stream flipped onto a canvas and
  * records the canvas. The saved file matches what the user saw in the
  * (mirrored) live preview. Tracks stay owned by the caller.
- * Returns { stop } — stop() resolves with the Blob (or null).
+ * The encoder starts only after a settle window past the first real
+ * frame, so camera warm-up frames (upside-down / exposure-ramping on
+ * some drivers) never make it into the clip. Returns { stop } — stop()
+ * resolves with the Blob (or null when nothing was recorded).
  */
-export function startMirroredRecording(stream, { fps = 24, maxWidth = 960, videoBitsPerSecond = 1000000 } = {}) {
+export function startMirroredRecording(stream, { fps = 24, maxWidth = 960, videoBitsPerSecond = 1000000, settleMs = 1500 } = {}) {
   if (!stream || typeof MediaRecorder === 'undefined'
       || typeof document === 'undefined' || !document.createElement('canvas').captureStream) {
     return { stop: async () => null }
@@ -76,15 +72,18 @@ export function startMirroredRecording(stream, { fps = 24, maxWidth = 960, video
 
   let raf = 0
   let running = true
+  const paintFrame = () => {
+    if (video.readyState < 2) return false
+    ctx.save()
+    ctx.translate(width, 0)
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, 0, 0, width, height)
+    ctx.restore()
+    return true
+  }
   const draw = () => {
     if (!running) return
-    if (video.readyState >= 2) {
-      ctx.save()
-      ctx.translate(width, 0)
-      ctx.scale(-1, 1)
-      ctx.drawImage(video, 0, 0, width, height)
-      ctx.restore()
-    }
+    paintFrame()
     raf = requestAnimationFrame(draw)
   }
 
@@ -114,17 +113,44 @@ export function startMirroredRecording(stream, { fps = 24, maxWidth = 960, video
     }
   })
 
+  // Start the encoder only after the hidden video is serving real frames
+  // plus a settle window: otherwise warm-up frames (blank, or upside-down
+  // on some drivers) open the clip and playback starts glitched until a
+  // later keyframe "fixes" it. Waits are capped so a stuck camera can't
+  // hang the countdown. stop() before start resolves null (no hang).
+  let started = false
+  const begin = (async () => {
+    await playing
+    const firstDeadline = performance.now() + 1500
+    while (running && video.readyState < 2 && performance.now() < firstDeadline) {
+      await new Promise((r) => requestAnimationFrame(r))
+    }
+    if (!running || video.readyState < 2) return
+    paintFrame()
+    const settleUntil = performance.now() + settleMs
+    while (running && performance.now() < settleUntil) {
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    if (!running || video.readyState < 2) return
+    paintFrame()
+    if (!running || recorder.state !== 'inactive') return
+    recorder.start(250)
+    started = true
+    draw()
+  })()
+  // Page may navigate mid-wait; never let that surface as unhandled.
+  begin.catch(() => null)
+
   const stop = async () => {
     running = false
     cancelAnimationFrame(raf)
     await playing
     video.pause()
     video.srcObject = null
-    if (recorder.state !== 'inactive') recorder.stop()
+    if (!started || recorder.state === 'inactive') return null
+    recorder.stop()
     return done
   }
 
-  recorder.start(250)
-  draw()
   return { stop }
 }
