@@ -171,12 +171,11 @@ async def download_photo(session_id: str):
 @router.get("/{session_id}/video")
 async def download_video(session_id: str):
     """
-    Serves the clip. Storage is always the captured format (webm on
-    Chromium kiosks, mp4 on Safari). Phones download mp4: webm is
-    transcoded to H.264/AAC on first hit and the mp4 is cached back to
-    Storage as {session_id}.mp4 so subsequent hits are a straight download.
-    If ffmpeg is absent or transcode fails, serves the stored bytes
-    unchanged (graceful fallback - still plays in Chrome).
+    Serves the clip. Storage is webm (booth records webm-only). Phones
+    download mp4: webm is transcoded to H.264/AAC on first hit and the
+    mp4 is cached back to Storage as {session_id}.mp4 so subsequent hits
+    are a straight download. If ffmpeg is absent or transcode fails,
+    serves the stored bytes unchanged (graceful fallback).
     """
     try:
         row = db_service.get_survey(session_id)

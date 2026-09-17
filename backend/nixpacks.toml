@@ -1,0 +1,6 @@
+# Railway builds with root directory = backend/ (Procfile + requirements.txt
+# live here), so THIS file — not the repo-root one — is what Nixpacks reads.
+# Purely additive: installs ffmpeg for webm→mp4 download transcodes.
+# Install/start phases stay auto-detected exactly as before.
+[phases.setup]
+aptPkgs = ["ffmpeg"]
