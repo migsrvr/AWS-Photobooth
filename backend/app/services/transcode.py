@@ -44,47 +44,33 @@ def transcode_webm_to_mp4(webm_bytes: bytes, timeout: int = 20) -> bytes | None:
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as fout:
             out_path = fout.name
 
-        # H.264 video, AAC audio when present. yuv420p + faststart are required
-        # for quicktime / iOS playback. Veryfast keeps CPU low on Railway.
-        # We probe for audio implicitly: -c:a aac will no-op with warning if
-        # no audio stream; add -map 0 so we don't drop audio, but don't
-        # hard-fail when input is video-only.
+        # Single pass: H.264 video, AAC audio when present. yuv420p +
+        # faststart are required for quicktime / iOS playback. Veryfast
+        # keeps CPU low on Railway. `-map 0:a?` makes audio mapping
+        # optional: opus audio becomes AAC, video-only input (the booth
+        # records with audio:false) succeeds without a second run.
         cmd = [
             "ffmpeg",
             "-y",
             "-hide_banner",
             "-loglevel", "error",
             "-i", in_path,
+            "-map", "0:v",
+            "-map", "0:a?",
             "-c:v", "libx264",
             "-preset", "veryfast",
             "-crf", "23",
             "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart",
-            # Only transcode audio if it exists; copy silence otherwise.
-            # Using -c:a aac with aac fallback: if webm has opus, this
-            # becomes aac. If no audio, ffmpeg warns but still writes video.
             "-c:a", "aac",
             "-b:a", "128k",
+            "-movflags", "+faststart",
             out_path,
         ]
         result = subprocess.run(cmd, capture_output=True, timeout=timeout)
         if result.returncode != 0:
             err = result.stderr.decode(errors="replace")[:500]
             logger.warning(f"ffmpeg transcode failed ({result.returncode}): {err}")
-            # Fallback: try video-only (no audio codec) for opus-less clips
-            cmd_video_only = [
-                "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                "-i", in_path,
-                "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-                "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-                "-an",
-                out_path,
-            ]
-            result2 = subprocess.run(cmd_video_only, capture_output=True, timeout=timeout)
-            if result2.returncode != 0:
-                err2 = result2.stderr.decode(errors="replace")[:500]
-                logger.warning(f"ffmpeg video-only fallback failed ({result2.returncode}): {err2}")
-                return None
+            return None
 
         if not os.path.exists(out_path):
             logger.warning("transcode_webm_to_mp4: output file missing after ffmpeg")
